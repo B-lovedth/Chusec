@@ -4,12 +4,13 @@
 .auth-shell {
   min-height: 100vh;
   width: 100%;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(420px, 540px) minmax(420px, 1fr);
   align-items: center;
   justify-content: center;
-  background: $background;
-  padding: 20px 24px;
-  gap: clamp(30px, 3vw, 56px);
+  background: #f7f7f7;
+  padding: 28px 44px;
+  gap: 72px;
 
   &--login {
     padding-top: 36px;
@@ -17,18 +18,21 @@
   }
 
   @include respond-to(tablet) {
+    display: flex;
     flex-direction: column;
     justify-content: center;
     padding: 30px 16px;
+    gap: 40px;
   }
 }
 
 .auth-hero-panel {
-  width: min(100%, 520px);
+  width: 100%;
+  max-width: 540px;
   min-height: 760px;
-  background: linear-gradient(180deg, #0f9fe8 0%, #0b92dd 100%);
+  background: linear-gradient(180deg, #0d9ae7 0%, #0d97e5 100%);
   border-radius: 28px;
-  padding: 40px 28px 34px;
+  padding: 34px 28px 32px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -36,27 +40,42 @@
   position: relative;
   overflow: hidden;
 
+  @include respond-to(tablet) {
+    max-width: 600px;
+    min-height: 420px;
+  }
+}
+
+.auth-carousel-track {
+  display: flex;
+  width: 100%;
+  transition: transform 0.55s ease;
+}
+
+.auth-carousel-slide {
+  width: 100%;
+  flex: 0 0 100%;
+  display: flex;
+  flex-direction: column;
+
   h2 {
-    font-size: clamp(2.5rem, 3vw, 4.2rem);
+    font-size: clamp(2.7rem, 3vw, 4.2rem);
     line-height: 1.02;
     letter-spacing: -0.07em;
-    margin: 0 0 12px;
+    margin: 0 0 14px;
     color: #f5fbff;
     font-weight: 700;
   }
 
   p {
     margin: 0;
-    max-width: 340px;
+    max-width: 390px;
     color: rgba(255, 255, 255, 0.9);
-    line-height: 1.5;
+    line-height: 1.55;
     font-size: 1.05rem;
   }
 
   @include respond-to(tablet) {
-    width: min(100%, 600px);
-    min-height: 420px;
-
     h2 {
       font-size: clamp(2.1rem, 6vw, 3.2rem);
     }
@@ -106,6 +125,11 @@
     right: 26px;
     top: 38px;
   }
+
+  &--right-alt {
+    top: 72px;
+    right: 34px;
+  }
 }
 
 .alert-dot {
@@ -140,6 +164,10 @@
     height: 10px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.45);
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.25s ease;
 
     &.is-active {
       width: 24px;
@@ -151,10 +179,10 @@
 
 .auth-form-panel {
   width: min(100%, 700px);
-  background: rgba(244, 244, 244, 0.96);
-  border-radius: 26px;
-  padding: clamp(20px, 1.8vw, 32px) clamp(18px, 2vw, 26px) 26px;
-  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.05);
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
 
   &--compact {
     width: min(100%, 620px);
@@ -167,20 +195,28 @@
 
 .auth-card {
   width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
 }
 
 .brand-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 8px auto 16px;
+  margin: 10px auto 6px;
+}
+
+.brand-logo {
+  width: auto;
+  height: 42px;
+  object-fit: contain;
 }
 
 .auth-heading {
-  margin: 6px 0 20px;
+  margin: 10px 0 18px;
   text-align: center;
-  font-size: clamp(1.7rem, 2vw, 2.1rem);
-  line-height: 1.25;
+  font-size: clamp(1.75rem, 2vw, 2.2rem);
+  line-height: 1.35;
   color: $dark-text;
   font-weight: 500;
   letter-spacing: -0.04em;
@@ -230,8 +266,8 @@
   position: relative;
   display: flex;
   align-items: center;
-  background: $input-bg;
-  border: 1px solid $border;
+  background: #f7f7f7;
+  border: 1px solid rgba(17, 24, 39, 0.14);
   border-radius: 12px;
   min-height: 56px;
   overflow: hidden;
@@ -323,14 +359,14 @@
 .primary-button {
   flex: 1;
   border: none;
-  background: linear-gradient(180deg, #1d9ae9 0%, #0b8ae4 100%);
-  color: $foreground;
-  height: 58px;
-  border-radius: 999px;
+  background: linear-gradient(180deg, #0f9fe8 0%, #0a8fe2 100%);
+  color: #fff;
+  height: 56px;
+  border-radius: 14px;
   font-size: 1.12rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 12px 22px rgba(21, 132, 226, 0.24);
+  box-shadow: 0 8px 16px rgba(22, 123, 202, 0.18);
 
   @include respond-to(mobile) {
     width: 100%;

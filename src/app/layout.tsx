@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { GlobalChrome } from "@/components/layout/GlobalChrome";
 import "@/styles/global.scss";
 import "@/styles/auth.scss";
 import "@/styles/dashboard.scss";
@@ -25,7 +26,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body>{children}</body>
+      <body>
+        <GlobalChrome>{children}</GlobalChrome>
+      </body>
     </html>
   );
 }

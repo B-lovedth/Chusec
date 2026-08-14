@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import { loginUser, registerUser } from "@/services";
-import Image from "next/image";
 
 type AuthExperienceProps = {
   mode: "signup" | "login";
@@ -93,7 +93,7 @@ export function AuthExperience({ mode }: AuthExperienceProps) {
   return (
     <div className="auth-card">
       <div className="brand-row" aria-label="Chusec brand">
-        <Image src="/logo.png" alt="Chusec logo" width={70} height={32} />
+        <Image src="/logo.png" alt="Chusec" width={156} height={52} className="brand-logo" priority />
       </div>
 
       <h1 className="auth-heading">{pageTitle}</h1>

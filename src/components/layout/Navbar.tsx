@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
-import { Bell, ChevronDown, MapPin } from "lucide-react";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import { Bell, ChevronDown } from "lucide-react";
 import { currentUser } from "@/data/dashboard";
 
 const navItems = [
@@ -10,11 +14,12 @@ const navItems = [
 ];
 
 export function Navbar() {
+  const pathname = usePathname();
+
   return (
     <header className="topbar">
       <div className="topbar__brand" aria-label="Chusec brand">
-        <span className="brand-mark">c</span>
-        <span className="brand-word">husec</span>
+        <Image src="/logo.png" alt="Chusec" width={132} height={44} className="topbar__logo" priority />
       </div>
 
       <nav className="topbar__nav" aria-label="Main navigation">
@@ -22,7 +27,7 @@ export function Navbar() {
           <Link
             key={item.href}
             href={item.href}
-            className={item.href === "/dashboard" ? "topbar__nav-item is-active" : "topbar__nav-item"}
+            className={pathname === item.href ? "topbar__nav-item is-active" : "topbar__nav-item"}
           >
             {item.label}
           </Link>
