@@ -1,8 +1,11 @@
+import { PageShell } from "@/components/layout/PageShell";
+import { AlertList } from "@/components/alerts/AlertList";
+import { currentUser } from "@/data/dashboard";
+
 export default function AlertsPage() {
   return (
-    <main className="placeholder-page">
-      <h1>Alerts</h1>
-      <p>Coming soon...</p>
-    </main>
+    <PageShell title="Alerts" location={currentUser.location}>
+      <AlertList />
+    </PageShell>
   );
 }

@@ -1,8 +1,11 @@
+import { PageShell } from "@/components/layout/PageShell";
+import { ReportForm } from "@/components/report/ReportForm";
+import { currentUser } from "@/data/dashboard";
+
 export default function ReportPage() {
   return (
-    <main className="placeholder-page">
-      <h1>Report</h1>
-      <p>Coming soon...</p>
-    </main>
+    <PageShell title="Report" subtitle="Identity protected · GPS auto-captured" location={currentUser.location}>
+      <ReportForm />
+    </PageShell>
   );
 }

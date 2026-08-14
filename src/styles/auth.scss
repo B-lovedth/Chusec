@@ -1,409 +1,511 @@
 @use "variables" as *;
 @use "mixins" as *;
 
-.auth-shell {
-  min-height: 100vh;
-  width: 100%;
-  display: grid;
-  grid-template-columns: minmax(420px, 540px) minmax(420px, 1fr);
-  align-items: center;
-  justify-content: center;
-  background: #f7f7f7;
-  padding: 28px 44px;
-  gap: 72px;
+/* ------------------------------------------------------------------ *
+ * Shared auth chrome
+ * ------------------------------------------------------------------ */
 
-  &--login {
-    padding-top: 36px;
-    padding-bottom: 36px;
-  }
+.auth-brand {
+  @include flex-center;
+  margin-bottom: 4px;
 
-  @include respond-to(tablet) {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 30px 16px;
-    gap: 40px;
+  img {
+    width: 103px;
+    height: auto;
   }
 }
 
-.auth-hero-panel {
-  width: 100%;
-  max-width: 540px;
-  min-height: 760px;
-  background: linear-gradient(180deg, #0d9ae7 0%, #0d97e5 100%);
-  border-radius: 28px;
-  padding: 34px 28px 32px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  box-shadow: 0 18px 32px rgba(0, 0, 0, 0.06);
-  position: relative;
-  overflow: hidden;
-
-  @include respond-to(tablet) {
-    max-width: 600px;
-    min-height: 420px;
-  }
-}
-
-.auth-carousel-track {
-  display: flex;
-  width: 100%;
-  transition: transform 0.55s ease;
-}
-
-.auth-carousel-slide {
-  width: 100%;
-  flex: 0 0 100%;
-  display: flex;
-  flex-direction: column;
-
-  h2 {
-    font-size: clamp(2.7rem, 3vw, 4.2rem);
-    line-height: 1.02;
-    letter-spacing: -0.07em;
-    margin: 0 0 14px;
-    color: #f5fbff;
-    font-weight: 700;
-  }
-
-  p {
-    margin: 0;
-    max-width: 390px;
-    color: rgba(255, 255, 255, 0.9);
-    line-height: 1.55;
-    font-size: 1.05rem;
-  }
-
-  @include respond-to(tablet) {
-    h2 {
-      font-size: clamp(2.1rem, 6vw, 3.2rem);
-    }
-  }
-}
-
-.auth-hero-graphic {
-  position: relative;
-  height: 360px;
-  width: 100%;
-  margin-bottom: 32px;
-  overflow: hidden;
-}
-
-.graph-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
-  background-size: 24px 24px;
-  border-radius: 20px;
-  opacity: 0.4;
-}
-
-.signal-tag {
-  position: absolute;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.92);
-  color: $dark-text;
-  border-radius: 999px;
-  min-width: 92px;
-  height: 36px;
-  padding: 0 18px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  box-shadow: 0 12px 24px rgba(11, 69, 110, 0.12);
-
-  &--left {
-    left: 30px;
-    top: 92px;
-  }
-
-  &--right {
-    right: 26px;
-    top: 38px;
-  }
-
-  &--right-alt {
-    top: 72px;
-    right: 34px;
-  }
-}
-
-.alert-dot {
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  background: $danger;
-  border-radius: 50%;
-  box-shadow: 0 0 0 6px rgba(255, 107, 87, 0.18);
-  bottom: 150px;
-  left: 76px;
-}
-
-.dashed-line {
-  position: absolute;
-  width: 260px;
-  height: 2px;
-  border-bottom: 3px dashed rgba(255, 255, 255, 0.9);
-  left: 110px;
-  bottom: 152px;
-  transform: rotate(-18deg);
-}
-
-.page-indicator {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 28px;
-
-  &__dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.45);
-    border: 0;
-    padding: 0;
-    cursor: pointer;
-    transition: all 0.25s ease;
-
-    &.is-active {
-      width: 24px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.95);
-    }
-  }
-}
-
-.auth-form-panel {
-  width: min(100%, 700px);
-  background: transparent;
-  border-radius: 0;
-  padding: 0;
-  box-shadow: none;
-
-  &--compact {
-    width: min(100%, 620px);
-    min-height: 500px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-}
-
-.auth-card {
-  width: 100%;
-  max-width: 520px;
-  margin: 0 auto;
-}
-
-.brand-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 10px auto 6px;
-}
-
-.brand-logo {
-  width: auto;
-  height: 42px;
-  object-fit: contain;
-}
-
-.auth-heading {
-  margin: 10px 0 18px;
+.auth-title {
   text-align: center;
-  font-size: clamp(1.75rem, 2vw, 2.2rem);
-  line-height: 1.35;
-  color: $dark-text;
-  font-weight: 500;
-  letter-spacing: -0.04em;
+  font-size: 19px;
+  font-weight: 400;
+  color: $text;
 }
 
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 25px;
 }
 
-.name-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+.auth-switch {
+  margin-top: -4px;
+  text-align: center;
+  font-size: 13px;
+  color: $text-soft;
 
-  @include respond-to(mobile) {
-    grid-template-columns: 1fr;
-  }
-}
-
-.field-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  color: $dark-text;
-  font-size: 0.98rem;
-
-  span {
-    color: rgba(15, 23, 42, 0.88);
-    font-size: 0.98rem;
+  a {
+    color: $blue;
     font-weight: 500;
-  }
 
-  .required {
-    color: #ef4444;
-  }
-
-  small {
-    color: rgba(15, 23, 42, 0.62);
-    font-size: 0.76rem;
-    line-height: 1.4;
-  }
-}
-
-.input-with-icon {
-  position: relative;
-  display: flex;
-  align-items: center;
-  background: #f7f7f7;
-  border: 1px solid rgba(17, 24, 39, 0.14);
-  border-radius: 12px;
-  min-height: 56px;
-  overflow: hidden;
-
-  input {
-    width: 100%;
-    border: 0;
-    background: transparent;
-    padding: 15px 16px 15px 42px;
-    color: $dark-text;
-    outline: none;
-    font-size: 1.02rem;
-
-    &::placeholder {
-      color: rgba(82, 89, 99, 0.8);
+    &:hover {
+      text-decoration: underline;
     }
   }
 }
 
-.input-with-action {
-  .password-toggle {
-    position: absolute;
-    right: 14px;
-    border: none;
-    background: transparent;
-    color: rgba(15, 23, 42, 0.62);
-    font-size: 1.15rem;
-    cursor: pointer;
+.auth-status {
+  padding: 10px 14px;
+  border-radius: $r-xs;
+  font-size: 13px;
+
+  &--error {
+    background: $critical-bg;
+    color: #b3261e;
+  }
+
+  &--success {
+    background: $low-bg;
+    color: #0d7a45;
   }
 }
 
-.input-icon {
-  position: absolute;
-  left: 14px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(15, 23, 42, 0.6);
-  font-size: 1rem;
+/* ------------------------------------------------------------------ *
+ * Login — full-bleed blue field with a centred white card
+ * ------------------------------------------------------------------ */
+
+.auth-centered {
+  min-height: 100vh;
+  min-height: 100dvh;
+  @include flex-center;
+  padding: 40px 24px;
+  background: $blue;
 }
 
-.checkbox-row {
+.auth-card {
+  width: 100%;
+  max-width: 720px;
+  padding: 70px 50px 64px;
+  background: $surface;
+  border-radius: $r-card;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+
+  @include respond-to(mobile) {
+    padding: 44px 24px 40px;
+    border-radius: 20px;
+  }
+}
+
+.login-form {
+  margin-top: 34px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.login-forgot {
+  margin-top: -12px;
+  font-size: 11.5px;
+  color: $text-muted;
+
+  &:hover {
+    color: $text-soft;
+  }
+}
+
+.login-actions {
+  @include flex-center;
+  gap: 13px;
+  margin-top: 32px;
+}
+
+.login-submit {
+  width: 284px;
+  height: 51px;
+
+  @include respond-to(small) {
+    width: 100%;
+  }
+}
+
+.login-biometric {
+  @include flex-center;
+  flex: 0 0 auto;
+  width: 51px;
+  height: 51px;
+  border-radius: 50%;
+  background: $blue;
+  color: #fff;
+
+  &:hover {
+    background: $blue-hover;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Signup — carousel panel + form
+ * ------------------------------------------------------------------ */
+
+.auth-split {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(360px, 460px) 1fr;
+  max-width: $app-max-width;
+  margin: 0 auto;
+  /* No right padding: it keeps the form column centred on the space left of
+     the panel, matching the design's 965px centre line at 1440px. */
+  padding: 36px 0 36px 30px;
+  background: $surface;
+
+  @include respond-to(tablet) {
+    display: block;
+    padding: 0;
+  }
+}
+
+.auth-split__form {
+  @include flex-center(column);
+  padding: 40px;
+
+  @include respond-to(tablet) {
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: 48px 24px;
+  }
+
+  @include respond-to(mobile) {
+    padding: 40px 20px 48px;
+  }
+}
+
+.signup-form {
+  width: 100%;
+  max-width: 663px;
+
+  .auth-form {
+    margin-top: 29px;
+  }
+}
+
+.signup-names {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  @include respond-to(small) {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+}
+
+.signup-terms {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  margin-top: 2px;
-  color: rgba(15, 23, 42, 0.7);
-  font-size: 0.78rem;
+  gap: 10px;
+  font-size: 12px;
+  color: $text-soft;
   line-height: 1.5;
+  cursor: pointer;
+
+  a {
+    color: $blue;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.checkbox {
+  position: relative;
+  flex: 0 0 auto;
+  width: 17px;
+  height: 17px;
+  margin-top: 1px;
 
   input {
-    width: 18px;
-    height: 18px;
-    margin-top: 2px;
-    accent-color: $blue;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  &__box {
+    @include flex-center;
+    width: 100%;
+    height: 100%;
+    border: 1.5px solid $border;
+    border-radius: 5px;
+    background: $surface;
+    color: transparent;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+
+  input:checked + &__box {
+    background: $blue;
+    border-color: $blue;
+    color: #fff;
+  }
+
+  input:focus-visible + &__box {
+    outline: 2px solid $blue;
+    outline-offset: 2px;
   }
 }
 
-.link-row {
+.signup-submit {
+  width: 307px;
+  height: 50px;
+  margin: 48px auto 0;
+
+  @include respond-to(small) {
+    width: 100%;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Carousel panel (desktop) + onboarding overlay (mobile)
+ * ------------------------------------------------------------------ */
+
+.promo-panel {
+  position: relative;
   display: flex;
-  justify-content: flex-end;
-  margin-top: -4px;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 44px 40px 40px;
+  background: $blue;
+  border-radius: 20px;
+  color: #fff;
+
+  @include respond-to(tablet) {
+    display: none;
+  }
 }
 
-.link-row a,
-.switch-copy a {
-  color: $blue;
-  font-weight: 600;
+.promo-panel__viewport {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
 }
 
-.switch-copy {
-  margin: 0;
-  text-align: center;
-  color: rgba(15, 23, 42, 0.7);
-  font-size: 0.98rem;
+.promo-slide {
+  display: flex;
+  flex-direction: column;
+  gap: 44px;
+
+  &[data-state="leaving"] {
+    display: none;
+  }
+
+  &[data-state="active"] {
+    animation: promo-slide-in 0.45s ease both;
+  }
+
+  &__art {
+    width: 100%;
+    max-width: 380px;
+  }
+
+  h2 {
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    margin-top: 14px;
+    max-width: 350px;
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.92);
+  }
 }
 
-.button-row {
+@keyframes promo-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.promo-dots {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-top: 12px;
+  gap: 9px;
+  margin-top: 34px;
 
-  @include respond-to(mobile) {
-    flex-direction: column;
+  &__dot {
+    width: 6px;
+    height: 4px;
+    padding: 0;
+    border-radius: $r-pill;
+    background: rgba(255, 255, 255, 0.55);
+    transition: width 0.3s ease, background-color 0.3s ease;
+
+    &.is-active {
+      width: 26px;
+      background: #fff;
+    }
+  }
+
+  &--static {
+    pointer-events: none;
   }
 }
 
-.primary-button {
-  flex: 1;
-  border: none;
-  background: linear-gradient(180deg, #0f9fe8 0%, #0a8fe2 100%);
+/* Mobile onboarding — the same slides, promoted to a full-screen flow */
+
+.onboarding {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: none;
+  flex-direction: column;
+  padding: 28px 24px 32px;
+  background: $blue;
   color: #fff;
-  height: 56px;
-  border-radius: 14px;
-  font-size: 1.12rem;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 8px 16px rgba(22, 123, 202, 0.18);
+  overflow-y: auto;
 
-  @include respond-to(mobile) {
-    width: 100%;
+  @include respond-to(tablet) {
+    display: flex;
   }
 }
 
-.scan-button {
-  width: 58px;
-  height: 58px;
-  flex-shrink: 0;
-  border: none;
+.onboarding__skip {
+  align-self: flex-end;
+  padding: 6px 4px;
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.onboarding__body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 40px;
+  padding: 24px 0;
+
+  .promo-slide__art {
+    max-width: 340px;
+    align-self: center;
+  }
+
+  h2 {
+    font-size: 30px;
+  }
+}
+
+.onboarding__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.onboarding__next {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 30px;
+  border-radius: $r-pill;
+  background: #fff;
+  color: $blue;
+  font-weight: 600;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.9);
+  }
+}
+
+/* Keeps the mobile form out of sight until we know whether onboarding is due */
+.auth-split[data-phase="loading"] .auth-split__form {
+  @include respond-to(tablet) {
+    visibility: hidden;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Verification + forgot password
+ * ------------------------------------------------------------------ */
+
+.notice-card {
+  width: 100%;
+  max-width: 520px;
+  padding: 56px 48px 48px;
+  background: $surface;
+  border-radius: $r-card;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+  text-align: center;
+
+  @include respond-to(mobile) {
+    padding: 40px 24px;
+    border-radius: 20px;
+  }
+}
+
+.notice-card__icon {
+  @include flex-center;
+  width: 76px;
+  height: 76px;
+  margin: 0 auto 26px;
   border-radius: 50%;
-  background: linear-gradient(180deg, #1e9fe9 0%, #0f7fd5 100%);
-  color: $foreground;
-  font-size: 1.35rem;
-  cursor: pointer;
-  box-shadow: 0 12px 24px rgba(13, 105, 184, 0.2);
+  background: $blue-tint;
+  color: $blue;
 
-  @include respond-to(mobile) {
-    width: 100%;
-    border-radius: 999px;
+  &--success {
+    background: $low-bg;
+    color: $low;
   }
 }
 
-.status-message {
-  padding: 12px 14px;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  line-height: 1.5;
+.notice-card__title {
+  font-size: 24px;
+  font-weight: 700;
+}
 
-  &.success {
-    background: rgba(46, 204, 113, 0.12);
-    color: #0f8a4a;
-  }
+.notice-card__text {
+  margin-top: 12px;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: $text-soft;
 
-  &.error {
-    background: rgba(239, 68, 68, 0.1);
-    color: #b91c1c;
+  strong {
+    color: $text;
+    font-weight: 600;
   }
+}
+
+.notice-card__actions {
+  @include flex-center(column);
+  gap: 14px;
+  margin-top: 32px;
+}
+
+.notice-card__hint {
+  margin-top: 24px;
+  font-size: 12.5px;
+  color: $text-muted;
+
+  button,
+  a {
+    color: $blue;
+    font-weight: 500;
+    padding: 0;
+
+    &:disabled {
+      color: $text-muted;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.notice-card__form {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  text-align: left;
 }

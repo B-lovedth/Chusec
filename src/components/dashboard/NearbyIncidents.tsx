@@ -3,12 +3,10 @@ import { IncidentItem } from "@/components/dashboard/IncidentItem";
 
 export function NearbyIncidents() {
   return (
-    <section className="panel-section">
-      <div className="section-heading">
-        <h3>Nearby Incidents</h3>
-      </div>
+    <section className="panel panel--first">
+      <h2 className="panel__title">Nearby Incidents</h2>
 
-      <div className="incident-list">
+      <div className="list-card">
         {nearbyIncidents.map((incident) => (
           <IncidentItem key={incident.id} incident={incident} />
         ))}

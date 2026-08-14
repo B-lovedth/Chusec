@@ -1,0 +1,423 @@
+@use "variables" as *;
+@use "mixins" as *;
+
+/* ------------------------------------------------------------------ *
+ * Top bar
+ * ------------------------------------------------------------------ */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  max-width: $app-max-width;
+  margin: 0 auto;
+  padding: 32px $shell-gutter 28px;
+
+  @include respond-to(mobile) {
+    flex-wrap: wrap;
+    padding: 20px 16px 14px;
+    gap: 14px;
+  }
+}
+
+.topbar__logo {
+  width: 152px;
+  height: auto;
+
+  @include respond-to(mobile) {
+    width: 118px;
+  }
+}
+
+.topbar__cluster {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+
+  @include respond-to(mobile) {
+    gap: 10px;
+  }
+}
+
+.topbar__nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 8px;
+  background: $surface;
+  border-radius: $r-pill;
+  box-shadow: $shadow-card;
+
+  @include respond-to(mobile) {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+}
+
+.topbar__nav-item {
+  @include flex-center;
+  height: 39px;
+  padding: 0 22px;
+  border-radius: $r-pill;
+  font-size: 15.5px;
+  color: $text;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: $panel;
+  }
+
+  &.is-active {
+    background: $blue;
+    color: #fff;
+  }
+
+  @include respond-to(mobile) {
+    flex: 1 0 auto;
+    padding: 0 16px;
+    font-size: 14.5px;
+  }
+}
+
+.topbar__bell {
+  position: relative;
+  @include flex-center;
+  flex: 0 0 auto;
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  background: $surface;
+  color: $text;
+  box-shadow: $shadow-card;
+
+  &__dot {
+    position: absolute;
+    top: 16px;
+    right: 17px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: $critical;
+    border: 1.5px solid $surface;
+  }
+
+  @include respond-to(mobile) {
+    width: 46px;
+    height: 46px;
+
+    &__dot {
+      top: 12px;
+      right: 13px;
+    }
+  }
+}
+
+.topbar__account {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.topbar__menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 45;
+  min-width: 200px;
+  padding: 6px;
+  background: $surface;
+  border: 1px solid $border-soft;
+  border-radius: $r-md;
+  box-shadow: 0 12px 30px rgba(16, 24, 40, 0.14);
+  animation: topbar-menu-in 0.14s ease both;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: $r-xs;
+    font-size: 14px;
+    text-align: left;
+    color: $text;
+
+    &:hover {
+      background: $panel;
+    }
+
+    &--danger {
+      color: $critical;
+
+      &:hover {
+        background: $critical-bg;
+      }
+    }
+  }
+
+  &__divider {
+    height: 1px;
+    margin: 6px 4px;
+    background: $border-soft;
+    border: none;
+  }
+}
+
+@keyframes topbar-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.topbar__user {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 55px;
+  padding: 0 14px 0 6px;
+  border-radius: $r-pill;
+  background: $surface;
+  box-shadow: $shadow-card;
+
+  img {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  &__name {
+    font-size: 15px;
+  }
+
+  &__chevron {
+    color: $text-soft;
+    transition: transform 0.16s ease;
+  }
+
+  &[aria-expanded="true"] &__chevron {
+    transform: rotate(180deg);
+  }
+
+  @include respond-to(mobile) {
+    height: 46px;
+    padding: 0 10px 0 5px;
+
+    img {
+      width: 36px;
+      height: 36px;
+    }
+
+    &__name {
+      display: none;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Page shell
+ * ------------------------------------------------------------------ */
+
+.page-card {
+  /* `width` keeps the side gutters below the cap; `max-width` stops the
+     content stretching past the width the designs were drawn at. */
+  width: calc(100% - #{$shell-gutter * 2});
+  max-width: $app-max-width - $shell-gutter * 2;
+  margin: 0 auto $shell-gutter;
+  padding: 30px 26px 34px;
+  background: $surface;
+  border-radius: $r-card;
+  min-height: calc(100vh - 178px);
+
+  @include respond-to(mobile) {
+    width: calc(100% - 24px);
+    margin: 0 auto 16px;
+    padding: 22px 14px 26px;
+    border-radius: 18px;
+  }
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+
+  &__title {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  &__subtitle {
+    margin-top: 3px;
+    font-size: 14.5px;
+    color: $text-muted;
+  }
+
+  @include respond-to(small) {
+    &__title {
+      font-size: 22px;
+    }
+  }
+}
+
+.location-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  height: 32px;
+  padding: 0 18px 0 14px;
+  border-radius: $r-pill;
+  background: #e9f0f6;
+  font-size: 14px;
+
+  svg {
+    color: $blue;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Grey section panel + white list card
+ * ------------------------------------------------------------------ */
+
+.panel {
+  padding: 20px 19px;
+  background: $panel;
+  border-radius: $r-panel;
+
+  & + & {
+    margin-top: 22px;
+  }
+
+  &__title {
+    margin-bottom: 16px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  @include respond-to(mobile) {
+    padding: 16px 12px;
+  }
+}
+
+.list-card {
+  background: $surface;
+  border: 1px solid $border-soft;
+  border-radius: $r-md;
+  overflow: hidden;
+}
+
+.list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 96px;
+  padding: 18px 26px;
+
+  & + & {
+    border-top: 1px solid $border-soft;
+  }
+
+  &__lead {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  &__meta {
+    margin-top: 4px;
+    font-size: 13px;
+    color: $text-muted;
+  }
+
+  @include respond-to(mobile) {
+    min-height: 0;
+    padding: 14px 16px;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Severity
+ * ------------------------------------------------------------------ */
+
+.severity-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 82px;
+  height: 26px;
+  padding: 0 12px;
+  border-radius: 6px;
+  font-size: 12.5px;
+
+  &--critical {
+    background: $critical-bg;
+    color: $critical;
+  }
+
+  &--high {
+    background: $high-bg;
+    color: $high;
+  }
+
+  &--medium {
+    background: $medium-bg;
+    color: #c48f00;
+  }
+
+  &--low {
+    background: $low-bg;
+    color: $low;
+  }
+
+  @include respond-to(small) {
+    min-width: 0;
+  }
+}
+
+.severity-dot {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+
+  &--critical {
+    background: $critical;
+  }
+
+  &--high {
+    background: $high;
+  }
+
+  &--medium {
+    background: $medium;
+  }
+
+  &--low {
+    background: $low;
+  }
+}

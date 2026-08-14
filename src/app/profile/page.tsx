@@ -1,8 +1,11 @@
+import { PageShell } from "@/components/layout/PageShell";
+import { ProfileForm } from "@/components/profile/ProfileForm";
+import { currentUser } from "@/data/dashboard";
+
 export default function ProfilePage() {
   return (
-    <main className="placeholder-page">
-      <h1>Profile</h1>
-      <p>Coming soon...</p>
-    </main>
+    <PageShell title="My Profile" location={currentUser.location}>
+      <ProfileForm />
+    </PageShell>
   );
 }

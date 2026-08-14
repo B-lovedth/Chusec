@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { Navbar } from "@/components/layout/Navbar";
+import { SosLauncher } from "@/components/sos/SosLauncher";
 
 type GlobalChromeProps = {
   children: ReactNode;
@@ -16,6 +17,7 @@ export function GlobalChrome({ children }: GlobalChromeProps) {
     <>
       {!isAuthRoute && <Navbar />}
       {children}
+      {!isAuthRoute && <SosLauncher />}
     </>
   );
 }

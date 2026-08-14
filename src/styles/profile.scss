@@ -1,0 +1,147 @@
+@use "variables" as *;
+@use "mixins" as *;
+
+.profile-identity {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  padding: 24px 26px;
+  background: $panel;
+  border-radius: $r-panel;
+
+  &__avatar {
+    flex: 0 0 auto;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  &__name {
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  &__email {
+    margin-top: 2px;
+    font-size: 15px;
+    color: $text-soft;
+  }
+
+  &__edit {
+    margin-left: auto;
+  }
+
+  @include respond-to(mobile) {
+    gap: 16px;
+    padding: 18px 16px;
+
+    &__avatar {
+      width: 76px;
+      height: 76px;
+    }
+
+    &__name {
+      font-size: 18px;
+    }
+
+    &__email {
+      font-size: 13.5px;
+      word-break: break-all;
+    }
+  }
+}
+
+.profile-panel {
+  margin-top: 22px;
+  padding: 24px 26px 26px;
+  background: $panel;
+  border-radius: $r-panel;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+    }
+  }
+
+  @include respond-to(mobile) {
+    padding: 18px 16px 20px;
+  }
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px 14px;
+
+  @include respond-to(mobile) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.nin-boxes {
+  display: flex;
+  gap: 10px;
+
+  input {
+    width: 48px;
+    height: 40px;
+    padding: 0;
+    text-align: center;
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: $r-xs;
+    outline: none;
+
+    &:focus {
+      border-color: $blue;
+      box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.12);
+    }
+
+    &:disabled {
+      background: $field-disabled;
+      border-color: transparent;
+      color: $text-soft;
+      -webkit-text-fill-color: $text-soft;
+      opacity: 1;
+    }
+  }
+
+  @include respond-to(desktop-sm) {
+    gap: 6px;
+
+    input {
+      width: 100%;
+      min-width: 0;
+    }
+  }
+}
+
+.profile-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 30px;
+  margin-top: 56px;
+
+  .btn {
+    min-width: 250px;
+  }
+
+  @include respond-to(mobile) {
+    flex-direction: column-reverse;
+    gap: 12px;
+    margin-top: 32px;
+
+    .btn {
+      min-width: 0;
+      width: 100%;
+    }
+  }
+}

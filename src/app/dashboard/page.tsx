@@ -1,22 +1,17 @@
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { PageShell } from "@/components/layout/PageShell";
 import { MapCard } from "@/components/dashboard/MapCard";
 import { ActiveCorridorAlert } from "@/components/dashboard/ActiveCorridorAlert";
 import { NearbyIncidents } from "@/components/dashboard/NearbyIncidents";
 import { TransitCorridors } from "@/components/dashboard/TransitCorridors";
-import { SOSButton } from "@/components/dashboard/SOSButton";
+import { currentUser } from "@/data/dashboard";
 
 export default function DashboardPage() {
   return (
-    <>
-      <main className="dashboard-page">
-        <DashboardHeader />
-        <MapCard />
-        <ActiveCorridorAlert />
-        <NearbyIncidents />
-        <TransitCorridors />
-      </main>
-
-      <SOSButton />
-    </>
+    <PageShell title={`Hello ${currentUser.firstName}`} subtitle="Welcome back" location={currentUser.location}>
+      <MapCard />
+      <ActiveCorridorAlert />
+      <NearbyIncidents />
+      <TransitCorridors />
+    </PageShell>
   );
 }

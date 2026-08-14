@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="User avatar">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bfe3ff" />
+      <stop offset="100%" stop-color="#8ecbff" />
+    </linearGradient>
+    <clipPath id="round">
+      <circle cx="60" cy="60" r="60" />
+    </clipPath>
+  </defs>
+  <g clip-path="url(#round)">
+    <rect width="120" height="120" fill="url(#sky)" />
+    <circle cx="60" cy="47" r="20" fill="#4a5560" />
+    <path d="M60 71c-20 0-34 13-37 31 0 0 14 18 37 18s37-18 37-18c-3-18-17-31-37-31Z" fill="#4a5560" />
+  </g>
+</svg>

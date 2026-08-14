@@ -1,11 +1,9 @@
-import { AuthExperience } from "@/components/auth/AuthExperience";
+import { LoginForm } from "@/components/auth/LoginForm";
 
 export default function LoginPage() {
   return (
-    <main className="auth-shell auth-shell--login">
-      <section className="auth-form-panel auth-form-panel--compact">
-        <AuthExperience mode="login" />
-      </section>
+    <main className="auth-centered">
+      <LoginForm />
     </main>
   );
 }

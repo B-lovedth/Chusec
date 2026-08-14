@@ -1,31 +1,29 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Space_Grotesk } from "next/font/google";
 import { GlobalChrome } from "@/components/layout/GlobalChrome";
 import "@/styles/global.scss";
 import "@/styles/auth.scss";
+import "@/styles/app.scss";
 import "@/styles/dashboard.scss";
+import "@/styles/alerts.scss";
+import "@/styles/report.scss";
+import "@/styles/profile.scss";
+import "@/styles/sos.scss";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "Chusec | Community Safety",
-  description: "Community safety reporting platform signup and login experience",
+  description: "Community safety reporting platform for Nigerian transit corridors",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
+    <html lang="en" className={spaceGrotesk.variable}>
       <body>
         <GlobalChrome>{children}</GlobalChrome>
       </body>

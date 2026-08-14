@@ -7,14 +7,17 @@ type IncidentItemProps = {
 
 export function IncidentItem({ incident }: IncidentItemProps) {
   return (
-    <div className="incident-item">
-      <div className="incident-item__meta">
-        <span className="incident-item__bullet" aria-hidden="true" />
-        <div className="incident-item__text">
-          <h4>{incident.title}</h4>
-          <small>
+    <div className="list-row">
+      <div className="list-row__lead">
+        <span
+          className={`severity-dot severity-dot--${incident.severity.toLowerCase()}`}
+          aria-hidden="true"
+        />
+        <div>
+          <h4 className="list-row__title">{incident.title}</h4>
+          <p className="list-row__meta">
             {incident.distance} · {incident.time}
-          </small>
+          </p>
         </div>
       </div>
 

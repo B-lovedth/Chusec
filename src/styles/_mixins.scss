@@ -5,14 +5,39 @@
   justify-content: center;
 }
 
+/// Breakpoints are max-width based, matching the desktop-first designs.
+/// `desktop-sm` 1279 · `tablet` 1023 · `mobile` 767 · `small` 479
 @mixin respond-to($breakpoint) {
-  @if $breakpoint == tablet {
-    @media (max-width: 980px) {
+  @if $breakpoint == desktop-sm {
+    @media (max-width: 1279px) {
+      @content;
+    }
+  } @else if $breakpoint == tablet {
+    @media (max-width: 1023px) {
       @content;
     }
   } @else if $breakpoint == mobile {
-    @media (max-width: 560px) {
+    @media (max-width: 767px) {
       @content;
     }
+  } @else if $breakpoint == small {
+    @media (max-width: 479px) {
+      @content;
+    }
+  } @else {
+    @error "Unknown breakpoint: #{$breakpoint}";
   }
+}
+
+/// Visually hide an element but keep it available to assistive tech.
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

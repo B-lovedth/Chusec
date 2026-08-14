@@ -7,14 +7,14 @@ type CorridorItemProps = {
 
 export function CorridorItem({ corridor }: CorridorItemProps) {
   return (
-    <div className="corridor-item">
-      <div className="corridor-item__info">
-        <h4>
-          {corridor.from} <span>→</span> {corridor.to}
+    <div className="list-row">
+      <div>
+        <h4 className="list-row__title">
+          {corridor.from} → {corridor.to}
         </h4>
-        <small>
+        <p className="list-row__meta">
           {corridor.description} · {corridor.distance}
-        </small>
+        </p>
       </div>
 
       <SeverityBadge severity={corridor.severity} />
