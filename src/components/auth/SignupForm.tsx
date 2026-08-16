@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Check, Lock, Mail, Phone } from "lucide-react";
 import { AuthBrand } from "@/components/auth/AuthBrand";
+import { BackButton } from "@/components/auth/BackButton";
 import { TextField } from "@/components/ui/TextField";
 import { registerUser } from "@/services/auth.service";
 import { setPendingVerificationEmail } from "@/lib/pending-verification";
@@ -69,7 +70,7 @@ export function SignupForm() {
 
     setIsSubmitting(true);
     try {
-      const { verificationEmailSentTo } = await registerUser({
+      const user = await registerUser({
         firstName: form.firstName,
         lastName: form.lastName,
         email: form.email,
@@ -77,8 +78,9 @@ export function SignupForm() {
         password: form.password,
       });
 
-      setPendingVerificationEmail(verificationEmailSentTo);
-      router.push(`/auth/verify-email?email=${encodeURIComponent(verificationEmailSentTo)}`);
+      const verificationEmail = user.email ?? form.email;
+      setPendingVerificationEmail(verificationEmail);
+      router.push(`/auth/verify-email?email=${encodeURIComponent(verificationEmail)}`);
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "Could not create your account. Try again.");
       setIsSubmitting(false);
@@ -87,6 +89,7 @@ export function SignupForm() {
 
   return (
     <div className="signup-form">
+      <BackButton />
       <AuthBrand title="Create your new account" />
 
       <form className="auth-form" onSubmit={handleSubmit} noValidate>

@@ -4,11 +4,13 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import { SquarePen } from "lucide-react";
 import { TextField } from "@/components/ui/TextField";
-import { currentUser } from "@/data/dashboard";
+import { updateProfile } from "@/services/auth.service";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import type { UserProfile } from "@/data/dashboard";
 
 const NIN_LENGTH = 11;
 
-type ProfileState = {
+type ProfileDraft = {
   firstName: string;
   lastName: string;
   email: string;
@@ -17,21 +19,27 @@ type ProfileState = {
   nin: string[];
 };
 
-function toProfileState(): ProfileState {
+function toDraft(user: UserProfile): ProfileDraft {
   return {
-    firstName: currentUser.firstName,
-    lastName: currentUser.lastName,
-    email: currentUser.email,
-    phoneNumber: currentUser.phoneNumber,
-    emergencyContact: currentUser.emergencyContact,
-    nin: currentUser.nin.padEnd(NIN_LENGTH, " ").slice(0, NIN_LENGTH).split("").map((c) => c.trim()),
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    phoneNumber: user.phoneNumber,
+    emergencyContact: user.emergencyContact,
+    nin: Array.from({ length: NIN_LENGTH }, (_, index) => user.nin[index] ?? ""),
   };
 }
 
 export function ProfileForm() {
+  const { user } = useCurrentUser();
   const [isEditing, setIsEditing] = useState(false);
-  const [saved, setSaved] = useState<ProfileState>(toProfileState);
-  const [draft, setDraft] = useState<ProfileState>(saved);
+  // Derived from the loaded profile until the user saves their own edit, so a
+  // late-arriving API response is picked up without an effect.
+  const [savedOverride, setSavedOverride] = useState<ProfileDraft | null>(null);
+  const saved = savedOverride ?? toDraft(user);
+  const [draft, setDraft] = useState<ProfileDraft>(saved);
+  const [status, setStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const ninRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,14 +67,35 @@ export function ProfileForm() {
 
   const startEditing = () => {
     setDraft(saved);
+    setStatus(null);
     setIsEditing(true);
   };
 
-  const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // Mock save — swap for updateUserProfile() once the API is live.
-    setSaved(draft);
-    setIsEditing(false);
+    setStatus(null);
+    setIsSaving(true);
+
+    try {
+      await updateProfile({
+        name: `${draft.firstName} ${draft.lastName}`.trim(),
+        email: draft.email,
+        phone: draft.phoneNumber,
+        nin: draft.nin.join(""),
+        emergency_contact: draft.emergencyContact,
+      });
+
+      setSavedOverride(draft);
+      setIsEditing(false);
+      setStatus({ type: "success", message: "Profile updated." });
+    } catch (error) {
+      setStatus({
+        type: "error",
+        message: error instanceof Error ? error.message : "Could not save your profile.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const values = isEditing ? draft : saved;
@@ -76,10 +105,11 @@ export function ProfileForm() {
       <section className="profile-identity">
         <Image
           className="profile-identity__avatar"
-          src={currentUser.avatar}
+          src={user.avatar}
           alt=""
           width={120}
           height={120}
+          unoptimized
         />
 
         <div>
@@ -169,10 +199,16 @@ export function ProfileForm() {
           />
         </div>
 
+        {status && (
+          <div className={`auth-status auth-status--${status.type} profile-status`} role="status">
+            {status.message}
+          </div>
+        )}
+
         {isEditing && (
           <div className="profile-actions">
-            <button type="submit" className="btn btn--primary">
-              Save
+            <button type="submit" className="btn btn--primary" disabled={isSaving}>
+              {isSaving ? "Saving..." : "Save"}
             </button>
             <button type="button" className="btn btn--outline" onClick={() => setIsEditing(false)}>
               Cancel

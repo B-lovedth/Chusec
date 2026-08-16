@@ -14,10 +14,84 @@
   margin: 0 auto;
   padding: 32px $shell-gutter 28px;
 
+  /* Phones navigate from the bottom tab bar instead. */
   @include respond-to(mobile) {
-    flex-wrap: wrap;
-    padding: 20px 16px 14px;
-    gap: 14px;
+    display: none;
+  }
+
+  /* The command centre has no bottom bar, so its nav stays at every width. */
+  &--persistent {
+    @include respond-to(mobile) {
+      display: flex;
+      flex-wrap: wrap;
+      padding: 16px 14px 12px;
+      gap: 12px;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Mobile bottom navigation
+ * ------------------------------------------------------------------ */
+
+.bottom-nav {
+  display: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 45;
+  height: calc(72px + env(safe-area-inset-bottom, 0px));
+  /* Applied to the whole element so the shadow follows the notch bulge. */
+  filter: drop-shadow(0 -2px 12px rgba(16, 24, 40, 0.1));
+
+  @include respond-to(mobile) {
+    display: block;
+  }
+
+  &__surface {
+    position: absolute;
+    inset: 0;
+    background: $surface;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: -32px;
+      left: 50%;
+      width: 116px;
+      height: 116px;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      background: $surface;
+    }
+  }
+
+  &__items {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    height: 72px;
+    padding-top: 12px;
+  }
+
+  &__gap {
+    flex: 0 0 84px;
+  }
+
+  &__tab {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    color: $text-muted;
+    font-size: 11px;
+
+    &.is-active {
+      color: $blue;
+    }
   }
 }
 
@@ -242,11 +316,15 @@
   border-radius: $r-card;
   min-height: calc(100vh - 178px);
 
+  /* Phones show content directly on the page — no white card, and room
+     under the fixed tab bar. */
   @include respond-to(mobile) {
-    width: calc(100% - 24px);
-    margin: 0 auto 16px;
-    padding: 22px 14px 26px;
-    border-radius: 18px;
+    width: 100%;
+    margin: 0;
+    padding: 18px 14px calc(112px + env(safe-area-inset-bottom, 0px));
+    background: transparent;
+    border-radius: 0;
+    min-height: 0;
   }
 }
 
@@ -256,6 +334,10 @@
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 22px;
+
+  &__text {
+    min-width: 0;
+  }
 
   &__title {
     font-size: 26px;
@@ -269,9 +351,36 @@
     color: $text-muted;
   }
 
-  @include respond-to(small) {
+  /* Only the dashboard passes an avatar, and only phones show it. */
+  &__avatar {
+    display: none;
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  @include respond-to(mobile) {
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+
+    &__avatar {
+      display: block;
+    }
+
+    &__text {
+      flex: 1 1 auto;
+    }
+
     &__title {
-      font-size: 22px;
+      font-size: 18px;
+    }
+
+    &__subtitle {
+      margin-top: 1px;
+      font-size: 12.5px;
     }
   }
 }
@@ -289,6 +398,12 @@
 
   svg {
     color: $blue;
+  }
+
+  @include respond-to(mobile) {
+    height: 29px;
+    padding: 0 13px 0 10px;
+    font-size: 12.5px;
   }
 }
 
@@ -312,7 +427,17 @@
   }
 
   @include respond-to(mobile) {
-    padding: 16px 12px;
+    padding: 14px 12px 16px;
+
+    & + & {
+      margin-top: 16px;
+    }
+
+    &__title {
+      margin-bottom: 12px;
+      font-size: 16px;
+      font-weight: 700;
+    }
   }
 }
 
@@ -355,7 +480,68 @@
 
   @include respond-to(mobile) {
     min-height: 0;
-    padding: 14px 16px;
+    padding: 10px 14px;
+
+    &__lead {
+      gap: 12px;
+    }
+
+    &__title {
+      font-size: 13.5px;
+      line-height: 1.2;
+    }
+
+    &__meta {
+      margin-top: 3px;
+      font-size: 11.5px;
+      line-height: 1.2;
+    }
+  }
+}
+
+.skeleton {
+  display: block;
+  border-radius: $r-pill;
+  background: linear-gradient(90deg, #eef0f2 25%, #f6f7f8 50%, #eef0f2 75%);
+  background-size: 200% 100%;
+  animation: skeleton-sweep 1.3s ease-in-out infinite;
+
+  &--dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+  }
+
+  &--title {
+    width: 148px;
+    height: 14px;
+  }
+
+  &--meta {
+    width: 106px;
+    height: 12px;
+    margin-top: 8px;
+  }
+
+  &--badge {
+    width: 82px;
+    height: 26px;
+    border-radius: 6px;
+  }
+}
+
+@keyframes skeleton-sweep {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
   }
 }
 
@@ -394,8 +580,11 @@
     color: $low;
   }
 
-  @include respond-to(small) {
+  @include respond-to(mobile) {
     min-width: 0;
+    height: 22px;
+    padding: 0 10px;
+    font-size: 11px;
   }
 }
 

@@ -2,29 +2,90 @@
 
 import { useRef, useState } from "react";
 import { Camera, MapPin, Mic } from "lucide-react";
-import { incidentTypes, type IncidentType } from "@/data/report";
-import { currentUser } from "@/data/dashboard";
+import { incidentTypes, severityLevels, type IncidentType } from "@/data/report";
+import { SubmitChoiceModal } from "@/components/report/SubmitChoiceModal";
+import { submitReport, uploadEvidence } from "@/services/incidents.service";
+import { getCurrentCoordinates, toApiPoint } from "@/lib/geolocation";
+import { isAuthenticated } from "@/lib/session";
+import { currentUser, type Severity } from "@/data/dashboard";
 
-export function ReportForm() {
+type Status = { type: "success" | "error"; message: string } | null;
+
+type ReportFormProps = {
+  isAnonymous: boolean;
+  onAnonymousChange: (anonymous: boolean) => void;
+};
+
+export function ReportForm({ isAnonymous, onAnonymousChange }: ReportFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [incidentType, setIncidentType] = useState<IncidentType>(incidentTypes[0]);
+  const [severity, setSeverity] = useState<Severity>("High");
   const [location, setLocation] = useState(currentUser.location);
   const [description, setDescription] = useState("");
-  const [evidenceName, setEvidenceName] = useState("");
-  const [submitted, setSubmitted] = useState("");
+  const [evidence, setEvidence] = useState<File | null>(null);
+  const [status, setStatus] = useState<Status>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isChoosing, setIsChoosing] = useState(false);
 
-  // Mock submit — swap for reportIncident() once the API is live.
-  const submit = (anonymous: boolean) => {
-    setSubmitted(anonymous ? "Anonymous report submitted." : "Report submitted.");
+  const submit = async (anonymous: boolean) => {
+    setIsChoosing(false);
+    onAnonymousChange(anonymous);
+    setStatus(null);
+    setIsSubmitting(true);
+
+    try {
+      const coordinates = await getCurrentCoordinates();
+      const point = toApiPoint(coordinates);
+
+      // The API has no location or severity field, so both ride in the note.
+      const note = [
+        description.trim(),
+        `Severity: ${severity}`,
+        location.trim() ? `Location: ${location.trim()}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n");
+
+      const report = await submitReport({
+        incident_type: incidentType,
+        note,
+        x: point.x,
+        y: point.y,
+      });
+
+      // Evidence upload needs a session, so it is skipped for anonymous reports.
+      if (evidence && !anonymous && isAuthenticated()) {
+        await uploadEvidence(evidence, String(report.id));
+      }
+
+      const skippedEvidence = evidence && (anonymous || !isAuthenticated());
+      setStatus({
+        type: "success",
+        message: skippedEvidence
+          ? `${anonymous ? "Anonymous report" : "Report"} submitted. Evidence was not attached — that requires a signed-in report.`
+          : `${anonymous ? "Anonymous report" : "Report"} submitted.`,
+      });
+
+      setDescription("");
+      setEvidence(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    } catch (error) {
+      setStatus({
+        type: "error",
+        message: error instanceof Error ? error.message : "Could not submit the report.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <section className="panel">
+    <section className="panel panel--plain-mobile">
       <form
         className="report-form"
         onSubmit={(event) => {
           event.preventDefault();
-          submit(false);
+          submit(isAnonymous);
         }}
       >
         <div>
@@ -45,18 +106,36 @@ export function ReportForm() {
           </div>
         </div>
 
+        <div className="report-severity">
+          <span className="report-label">Severity</span>
+          <div className="chip-row chip-row--quarters" role="radiogroup" aria-label="Severity">
+            {severityLevels.map((level) => (
+              <button
+                key={level}
+                type="button"
+                role="radio"
+                aria-checked={severity === level}
+                className={severity === level ? "chip is-active" : "chip"}
+                onClick={() => setSeverity(level)}
+              >
+                {level}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div>
-          <span className="report-label">Capture Evidence</span>
+          <span className="report-label">Capture evidence</span>
           <button type="button" className="dropzone" onClick={() => fileInputRef.current?.click()}>
             <Camera size={38} strokeWidth={1.4} />
-            {evidenceName && <span className="dropzone__caption">{evidenceName}</span>}
+            {evidence && <span className="dropzone__caption">{evidence.name}</span>}
           </button>
           <input
             ref={fileInputRef}
             type="file"
             accept="image/*,video/*"
             className="sr-only"
-            onChange={(event) => setEvidenceName(event.target.files?.[0]?.name ?? "")}
+            onChange={(event) => setEvidence(event.target.files?.[0] ?? null)}
           />
         </div>
 
@@ -94,21 +173,44 @@ export function ReportForm() {
           </div>
         </div>
 
-        {submitted && (
-          <div className="auth-status auth-status--success" role="status">
-            {submitted}
+        {status && (
+          <div className={`auth-status auth-status--${status.type}`} role="status">
+            {status.message}
           </div>
         )}
 
+        {/* Desktop shows both actions inline; phones use the chooser below. */}
         <div className="form-actions">
-          <button type="submit" className="btn btn--primary">
-            Submit report
+          <button type="submit" className="btn btn--primary" disabled={isSubmitting}>
+            {isSubmitting ? "Submitting..." : "Submit report"}
           </button>
-          <button type="button" className="btn btn--outline" onClick={() => submit(true)}>
+          <button
+            type="button"
+            className="btn btn--outline"
+            onClick={() => submit(true)}
+            disabled={isSubmitting}
+          >
             Submit report anonymous
           </button>
         </div>
+
+        <button
+          type="button"
+          className="btn btn--primary report-submit-mobile"
+          onClick={() => setIsChoosing(true)}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Submitting..." : isAnonymous ? "Submit anonymous report" : "Submit"}
+        </button>
       </form>
+
+      {isChoosing && (
+        <SubmitChoiceModal
+          onClose={() => setIsChoosing(false)}
+          onSubmit={submit}
+          isSubmitting={isSubmitting}
+        />
+      )}
     </section>
   );
 }

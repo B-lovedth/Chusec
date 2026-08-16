@@ -5,6 +5,27 @@
  * Shared auth chrome
  * ------------------------------------------------------------------ */
 
+.auth-back {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 22px;
+  border: 1px solid $border;
+  border-radius: 50%;
+  background: $surface;
+  color: $text;
+
+  &:hover {
+    background: $panel;
+  }
+
+  @include respond-to(mobile) {
+    display: flex;
+  }
+}
+
 .auth-brand {
   @include flex-center;
   margin-bottom: 4px;
@@ -70,6 +91,13 @@
   @include flex-center;
   padding: 40px 24px;
   background: $blue;
+
+  /* Phones drop the blue field and card entirely — see `Sign in.png`. */
+  @include respond-to(mobile) {
+    align-items: flex-start;
+    padding: 0;
+    background: $surface;
+  }
 }
 
 .auth-card {
@@ -81,8 +109,10 @@
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
 
   @include respond-to(mobile) {
-    padding: 44px 24px 40px;
-    border-radius: 20px;
+    max-width: none;
+    padding: 20px 21px 40px;
+    border-radius: 0;
+    box-shadow: none;
   }
 }
 
@@ -113,8 +143,10 @@
   width: 284px;
   height: 51px;
 
-  @include respond-to(small) {
-    width: 100%;
+  @include respond-to(mobile) {
+    flex: 1 1 auto;
+    width: auto;
+    height: 49px;
   }
 }
 
@@ -165,7 +197,8 @@
   }
 
   @include respond-to(mobile) {
-    padding: 40px 20px 48px;
+    justify-content: flex-start;
+    padding: 20px 21px 48px;
   }
 }
 
@@ -178,14 +211,14 @@
   }
 }
 
+/* Stays two-up at every width — the mobile design keeps the names side by side. */
 .signup-names {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 
-  @include respond-to(small) {
-    grid-template-columns: 1fr;
-    gap: 25px;
+  @include respond-to(mobile) {
+    gap: 14px;
   }
 }
 
@@ -251,9 +284,10 @@
   width: 307px;
   height: 50px;
   margin: 48px auto 0;
+  max-width: 100%;
 
-  @include respond-to(small) {
-    width: 100%;
+  @include respond-to(mobile) {
+    margin-top: 30px;
   }
 }
 
@@ -294,7 +328,7 @@
   }
 
   &[data-state="active"] {
-    animation: promo-slide-in 0.45s ease both;
+    animation: promo-slide-in 0.45s ease forwards;
   }
 
   &__art {
@@ -352,9 +386,25 @@
   &--static {
     pointer-events: none;
   }
+
+  /* On the white onboarding card the dots invert. */
+  &--dark {
+    justify-content: center;
+    pointer-events: none;
+
+    .promo-dots__dot {
+      width: 10px;
+      background: #d9dbde;
+
+      &.is-active {
+        width: 22px;
+        background: $blue;
+      }
+    }
+  }
 }
 
-/* Mobile onboarding — the same slides, promoted to a full-screen flow */
+/* Mobile onboarding — art on the blue field, copy in a card at the bottom */
 
 .onboarding {
   position: fixed;
@@ -362,61 +412,69 @@
   z-index: 60;
   display: none;
   flex-direction: column;
-  padding: 28px 24px 32px;
   background: $blue;
   color: #fff;
-  overflow-y: auto;
 
   @include respond-to(tablet) {
     display: flex;
   }
 }
 
-.onboarding__skip {
-  align-self: flex-end;
-  padding: 6px 4px;
-  font-size: 13.5px;
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.onboarding__body {
+.onboarding__art {
   flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 40px;
-  padding: 24px 0;
+  @include flex-center;
+  min-height: 0;
+  padding: 40px 24px;
+  animation: promo-slide-in 0.4s ease forwards;
 
   .promo-slide__art {
-    max-width: 340px;
-    align-self: center;
-  }
-
-  h2 {
-    font-size: 30px;
+    width: 100%;
+    max-width: 360px;
+    max-height: 100%;
   }
 }
 
-.onboarding__footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+.onboarding__card {
+  flex: 0 0 auto;
+  margin: 0 10px 16px;
+  padding: 34px 38px 40px;
+  background: $surface;
+  border-radius: 24px;
+  color: $text;
+  text-align: center;
+
+  @media (max-width: 359px) {
+    padding: 26px 20px 30px;
+  }
 }
 
-.onboarding__next {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 48px;
-  padding: 0 30px;
-  border-radius: $r-pill;
-  background: #fff;
-  color: $blue;
-  font-weight: 600;
+.onboarding__title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.9);
+.onboarding__text {
+  margin-top: 14px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: $text-soft;
+}
+
+.onboarding__card .promo-dots {
+  margin: 24px 0 0;
+}
+
+.onboarding__cta {
+  width: 100%;
+  height: 49px;
+  margin-top: 28px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .promo-slide[data-state="active"],
+  .onboarding__art {
+    animation: none;
   }
 }
 
@@ -443,6 +501,7 @@
   @include respond-to(mobile) {
     padding: 40px 24px;
     border-radius: 20px;
+    box-shadow: none;
   }
 }
 
@@ -458,6 +517,26 @@
   &--success {
     background: $low-bg;
     color: $low;
+  }
+
+  &--warn {
+    background: $critical-bg;
+    color: $critical;
+  }
+}
+
+.spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(0, 128, 255, 0.25);
+  border-top-color: $blue;
+  border-radius: 50%;
+  animation: spinner-turn 0.8s linear infinite;
+}
+
+@keyframes spinner-turn {
+  to {
+    transform: rotate(360deg);
   }
 }
 

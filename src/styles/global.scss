@@ -2,7 +2,7 @@
 @use "mixins" as *;
 
 :root {
-  --font-sans: var(--font-space-grotesk), "Segoe UI", Arial, sans-serif;
+  --font-sans: var(--font-inclusive-sans), "Segoe UI", Arial, sans-serif;
   --background: #{$page-bg};
   --foreground: #{$text};
 }
@@ -26,6 +26,11 @@ body {
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+
+  /* Phones drop the page card, so the page itself is the white surface. */
+  @include respond-to(mobile) {
+    background: $surface;
+  }
 }
 
 h1,
@@ -105,6 +110,10 @@ button {
   border: 1px solid $border;
   border-radius: $r-sm;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  @include respond-to(mobile) {
+    height: 42px;
+  }
 
   &:focus-within {
     border-color: $blue;

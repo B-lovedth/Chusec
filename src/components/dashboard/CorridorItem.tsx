@@ -9,9 +9,7 @@ export function CorridorItem({ corridor }: CorridorItemProps) {
   return (
     <div className="list-row">
       <div>
-        <h4 className="list-row__title">
-          {corridor.from} → {corridor.to}
-        </h4>
+        <h4 className="list-row__title">{corridor.name}</h4>
         <p className="list-row__meta">
           {corridor.description} · {corridor.distance}
         </p>

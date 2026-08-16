@@ -7,6 +7,10 @@
   border-radius: $r-md;
   overflow: hidden;
   background: #eaf0f3;
+
+  @include respond-to(mobile) {
+    height: 260px;
+  }
 }
 
 .map-card__canvas {
@@ -66,10 +70,21 @@
   }
 
   @include respond-to(mobile) {
-    left: 14px;
-    bottom: 14px;
-    width: 148px;
-    padding: 10px 12px 12px;
+    left: 8px;
+    bottom: 8px;
+    width: 68px;
+    padding: 6px 7px 7px;
+    border-radius: 5px;
+
+    &__title {
+      font-size: 7px;
+      letter-spacing: 0.02em;
+    }
+
+    &__list {
+      gap: 3px;
+      margin-top: 5px;
+    }
   }
 }
 
@@ -80,6 +95,13 @@
   font-size: 11px;
   letter-spacing: 0.06em;
   color: $text-muted;
+
+  @include respond-to(mobile) {
+    gap: 4px;
+    font-size: 6px;
+    line-height: 1;
+    letter-spacing: 0.02em;
+  }
 }
 
 .legend-line {
@@ -87,6 +109,11 @@
   width: 26px;
   height: 4px;
   border-radius: $r-pill;
+
+  @include respond-to(mobile) {
+    width: 14px;
+    height: 3px;
+  }
 
   &--critical {
     background: $critical;
@@ -127,9 +154,17 @@
   }
 
   @include respond-to(mobile) {
-    gap: 12px;
-    padding: 12px 14px;
-    font-size: 13.5px;
+    gap: 8px;
+    margin-top: 14px;
+    min-height: 0;
+    padding: 6px 10px;
+    font-size: 11px;
+    line-height: 1.3;
+
+    &__dot {
+      width: 8px;
+      height: 8px;
+    }
   }
 }
 

@@ -71,18 +71,33 @@
     }
   }
 
+  /* Phones dock it in the tab bar notch. */
   @include respond-to(mobile) {
     top: auto;
-    bottom: 24px;
-    right: 16px;
-    transform: none;
+    right: auto;
+    left: 50%;
+    bottom: calc(30px + env(safe-area-inset-bottom, 0px));
+    width: 78px;
+    height: 78px;
+    transform: translateX(-50%);
+    z-index: 46;
 
     &:hover {
-      transform: scale(1.04);
+      transform: translateX(-50%) scale(1.04);
+    }
+
+    &__label {
+      font-size: 19px;
     }
 
     &--placed {
+      left: auto;
       bottom: auto;
+      transform: none;
+
+      &:hover {
+        transform: scale(1.04);
+      }
     }
   }
 }
@@ -112,6 +127,13 @@
   background: rgba(248, 249, 250, 0.78);
   backdrop-filter: blur(1.5px);
   animation: sos-fade-in 0.18s ease both;
+
+  /* Phones present it as a bottom sheet. */
+  @include respond-to(mobile) {
+    align-items: flex-end;
+    padding: 0;
+    background: rgba(26, 26, 26, 0.28);
+  }
 }
 
 @keyframes sos-fade-in {
@@ -131,6 +153,38 @@
   background: $surface;
   border-radius: $r-panel;
   box-shadow: $shadow-modal;
+
+  @include respond-to(mobile) {
+    max-width: none;
+    max-height: 92vh;
+    border-radius: 24px 24px 0 0;
+    /* `forwards`, not `both`: if the animation never runs the sheet rests in
+       place rather than being held off-screen by the start keyframe. */
+    animation: sos-sheet-up 0.24s ease forwards;
+  }
+}
+
+@keyframes sos-sheet-up {
+  from {
+    transform: translateY(14%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Grab handle, phones only — the sheet has no header bar. */
+.sos-modal__handle {
+  display: none;
+  width: 124px;
+  height: 5px;
+  margin: 10px auto 0;
+  border-radius: $r-pill;
+  background: #1a1a1a;
+
+  @include respond-to(mobile) {
+    display: block;
+  }
 }
 
 .sos-modal__head {
@@ -139,6 +193,10 @@
   justify-content: space-between;
   padding: 22px 28px;
   border-bottom: 1px solid $border-soft;
+
+  @include respond-to(mobile) {
+    display: none;
+  }
 
   h2 {
     font-size: 15px;
@@ -209,6 +267,10 @@
     border-radius: 50%;
     background: $blue;
   }
+}
+
+.sos-dispatch-error {
+  margin-top: 12px;
 }
 
 .sos-modal__title {
@@ -296,6 +358,21 @@
   }
 }
 
+/* Sheet footer note, phones only. */
+.sos-background-note {
+  display: none;
+  margin-top: 26px;
+  padding-top: 18px;
+  border-top: 1px solid $border-soft;
+  text-align: center;
+  font-size: 13.5px;
+  color: $blue;
+
+  @include respond-to(mobile) {
+    display: block;
+  }
+}
+
 .sos-recipients {
   max-width: 432px;
   margin: 26px auto 0;
@@ -352,7 +429,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .sos-fab.is-active,
-  .sos-pulse__ring {
+  .sos-pulse__ring,
+  .sos-modal {
     animation: none;
   }
 }

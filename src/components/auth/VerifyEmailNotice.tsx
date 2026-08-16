@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { MailCheck } from "lucide-react";
-import { confirmEmailVerification, resendVerificationEmail } from "@/services/auth.service";
+import { MailCheck, TriangleAlert } from "lucide-react";
+import { resendVerificationEmail, verifyEmailToken } from "@/services/auth.service";
 import { getPendingVerificationEmail } from "@/lib/pending-verification";
 import { useClientSnapshot } from "@/hooks/useClientSnapshot";
 
@@ -13,11 +13,41 @@ const RESEND_COOLDOWN_SECONDS = 45;
 export function VerifyEmailNotice() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const token = searchParams.get("token") ?? "";
   const storedEmail = useClientSnapshot(getPendingVerificationEmail, "");
   const email = searchParams.get("email") ?? storedEmail;
+
+  const [failure, setFailure] = useState("");
   const [cooldown, setCooldown] = useState(0);
   const [notice, setNotice] = useState("");
-  const [isChecking, setIsChecking] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+
+  /**
+   * The emailed link lands here with `?token=…`. Confirm it, then hand the
+   * user to the success screen, which sends them on to sign in.
+   */
+  useEffect(() => {
+    if (!token) return;
+
+    let cancelled = false;
+
+    verifyEmailToken(token)
+      .then(() => {
+        if (!cancelled) router.replace("/auth/verify-email/success");
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setFailure(
+          error instanceof Error
+            ? error.message
+            : "That verification link is invalid or has expired.",
+        );
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token, router]);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -26,56 +56,74 @@ export function VerifyEmailNotice() {
   }, [cooldown]);
 
   const handleResend = async () => {
-    if (cooldown > 0 || !email) return;
-    setNotice("");
-    await resendVerificationEmail(email);
-    setCooldown(RESEND_COOLDOWN_SECONDS);
-    setNotice("Verification link sent again.");
-  };
+    if (cooldown > 0 || !email || isResending) return;
 
-  const handleCheck = async () => {
     setNotice("");
-    setIsChecking(true);
-    const { verified } = await confirmEmailVerification(searchParams.get("token") ?? undefined);
+    setIsResending(true);
 
-    if (verified) {
-      router.push("/auth/verify-email/success");
-      return;
+    try {
+      await resendVerificationEmail(email);
+      setCooldown(RESEND_COOLDOWN_SECONDS);
+      setNotice("Verification link sent again.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Could not resend the link.");
+    } finally {
+      setIsResending(false);
     }
-
-    setIsChecking(false);
-    setNotice("We haven't seen that link opened yet. Check your inbox and try again.");
   };
+
+  const isVerifying = Boolean(token) && !failure;
+
+  if (isVerifying) {
+    return (
+      <div className="notice-card">
+        <div className="notice-card__icon">
+          <span className="spinner" aria-hidden="true" />
+        </div>
+        <h1 className="notice-card__title">Verifying your email</h1>
+        <p className="notice-card__text" role="status">
+          One moment while we confirm your link.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="notice-card">
-      <div className="notice-card__icon">
-        <MailCheck size={32} strokeWidth={1.7} />
+      <div className={failure ? "notice-card__icon notice-card__icon--warn" : "notice-card__icon"}>
+        {failure ? <TriangleAlert size={30} strokeWidth={1.7} /> : <MailCheck size={32} strokeWidth={1.7} />}
       </div>
 
-      <h1 className="notice-card__title">Verify your email</h1>
+      <h1 className="notice-card__title">{failure ? "Link didn’t work" : "Verify your email"}</h1>
       <p className="notice-card__text">
-        We sent a verification link to {email ? <strong>{email}</strong> : "your email address"}. Open it to
-        activate your account, then sign in to reach your dashboard.
+        {failure ? (
+          failure
+        ) : (
+          <>
+            We sent a verification link to {email ? <strong>{email}</strong> : "your email address"}. Open it
+            to activate your account — we&apos;ll take you to sign in from there.
+          </>
+        )}
       </p>
 
       <div className="notice-card__actions">
-        <button type="button" className="btn btn--primary" onClick={handleCheck} disabled={isChecking}>
-          {isChecking ? "Checking..." : "I’ve opened the link"}
-        </button>
-        <Link href="/auth/login" className="btn btn--outline">
-          Back to sign in
+        <Link href="/auth/login" className="btn btn--primary">
+          Continue to sign in
         </Link>
       </div>
 
       <p className="notice-card__hint">
-        Didn&apos;t get it?{" "}
-        <button type="button" onClick={handleResend} disabled={cooldown > 0}>
+        {failure ? "Need a new link?" : "Didn’t get it?"}{" "}
+        <button type="button" onClick={handleResend} disabled={cooldown > 0 || isResending || !email}>
           {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend link"}
         </button>
       </p>
 
-      {notice && <p className="notice-card__hint">{notice}</p>}
+      {notice && (
+        <p className="notice-card__hint" role="status">
+          {notice}
+        </p>
+      )}
     </div>
   );
 }

@@ -18,6 +18,19 @@
   display: flex;
   flex-wrap: wrap;
   gap: 14px;
+
+  /* Phones lay the incident types out three-up, per the mobile design. */
+  @include respond-to(mobile) {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  &--quarters {
+    @include respond-to(mobile) {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
 }
 
 .chip {
@@ -42,10 +55,22 @@
     color: $blue;
   }
 
+  /* Inactive chips are filled rather than outlined on phones. */
   @include respond-to(mobile) {
-    flex: 1 1 130px;
-    height: 42px;
-    font-size: 13.5px;
+    height: 40px;
+    padding: 0 6px;
+    background: $panel;
+    border-color: transparent;
+    font-size: 12.5px;
+
+    &:hover {
+      border-color: transparent;
+    }
+
+    &.is-active {
+      background: $surface;
+      border-color: $blue;
+    }
   }
 }
 
@@ -127,13 +152,98 @@
     min-width: 250px;
   }
 
+  /* Phones use the single Submit button plus the chooser modal instead. */
   @include respond-to(mobile) {
-    flex-direction: column-reverse;
-    gap: 12px;
+    display: none;
+  }
+}
 
-    .btn {
-      min-width: 0;
-      width: 100%;
+.report-submit-mobile {
+  display: none;
+  width: 100%;
+  height: 49px;
+  margin-top: 8px;
+
+  @include respond-to(mobile) {
+    display: flex;
+  }
+}
+
+/* Phones drop the grey panel and fill the fields instead. */
+.panel--plain-mobile {
+  @include respond-to(mobile) {
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+  }
+}
+
+@include respond-to(mobile) {
+  .report-form {
+    gap: 18px;
+
+    .control,
+    .dropzone,
+    textarea {
+      background: $panel;
+      border-color: transparent;
+    }
+
+    .dropzone {
+      height: 100px;
+    }
+
+    textarea {
+      height: 96px;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Submit chooser (phones)
+ * ------------------------------------------------------------------ */
+
+.choice-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  @include flex-center;
+  padding: 24px;
+  background: rgba(26, 26, 26, 0.28);
+  animation: sos-fade-in 0.16s ease both;
+}
+
+.choice-modal {
+  position: relative;
+  width: 100%;
+  max-width: 322px;
+  padding: 46px 22px 26px;
+  background: $surface;
+  border-radius: 20px;
+  box-shadow: $shadow-modal;
+
+  &__close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    @include flex-center;
+    width: 26px;
+    height: 26px;
+    border: 1px solid $border;
+    border-radius: 50%;
+    color: $text;
+
+    &:hover {
+      background: $panel;
+    }
+  }
+
+  &__option {
+    width: 100%;
+    height: 49px;
+
+    & + & {
+      margin-top: 14px;
     }
   }
 }

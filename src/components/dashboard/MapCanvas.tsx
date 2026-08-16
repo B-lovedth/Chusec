@@ -28,7 +28,12 @@ const cities = [
   { name: "Rivers", x: 874, y: 400 },
 ];
 
-export function MapCanvas() {
+type MapCanvasProps = {
+  /** The command centre draws its own data-driven markers on top. */
+  showOverlays?: boolean;
+};
+
+export function MapCanvas({ showOverlays = true }: MapCanvasProps) {
   return (
     <svg
       className="map-card__canvas"
@@ -76,7 +81,7 @@ export function MapCanvas() {
       </g>
 
       {/* Corridors — colour matches the legend grades */}
-      <g fill="none" strokeLinecap="round">
+      <g fill="none" strokeLinecap="round" opacity={showOverlays ? 1 : 0.55}>
         <path d="M275 215C520 236 780 262 1015 290" stroke="#f0483e" strokeWidth="16" opacity="0.22" />
         <path d="M275 215C520 236 780 262 1015 290" stroke="#f0483e" strokeWidth="7" />
 
@@ -101,7 +106,7 @@ export function MapCanvas() {
       </g>
 
       {/* Incident markers */}
-      <g>
+      <g style={{ display: showOverlays ? undefined : "none" }}>
         <circle cx="275" cy="215" r="13" fill="#f0483e" />
         <circle cx="465" cy="175" r="12" fill="#ef7a1f" />
         <circle cx="925" cy="322" r="14" fill="#f5b70a" />

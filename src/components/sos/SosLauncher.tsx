@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Heart, MapPin, X } from "lucide-react";
 import { sosRecipients } from "@/data/sos";
 import { useDraggable } from "@/hooks/useDraggable";
+import { triggerSos } from "@/services/sos.service";
+import { getCurrentCoordinates, toApiPoint } from "@/lib/geolocation";
 
 const HOLD_TO_CANCEL_MS = 2000;
 
@@ -11,6 +13,8 @@ export function SosLauncher() {
   const [isActive, setIsActive] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [holdProgress, setHoldProgress] = useState(0);
+  const [dispatchError, setDispatchError] = useState("");
+  const [isLocationLive, setIsLocationLive] = useState(false);
   const frameRef = useRef<number | null>(null);
   const {
     ref: fabRef,
@@ -90,8 +94,25 @@ export function SosLauncher() {
         onClick={() => {
           // Ignore the click that ends a drag so moving it never fires SOS.
           if (consumeDrag()) return;
+
           setIsActive(true);
           setIsOpen(true);
+
+          if (isActive) return;
+
+          // Show the modal immediately, then dispatch — the alert going out
+          // must never wait on the location prompt resolving.
+          setDispatchError("");
+          getCurrentCoordinates()
+            .then((coordinates) => {
+              setIsLocationLive(coordinates !== null);
+              return triggerSos(toApiPoint(coordinates));
+            })
+            .catch((error: unknown) => {
+              setDispatchError(
+                error instanceof Error ? error.message : "Could not reach dispatch. Retrying is advised.",
+              );
+            });
         }}
         title="Press for SOS · drag to move"
         aria-label={isActive ? "SOS is active — open status" : "Trigger emergency SOS"}
@@ -111,6 +132,8 @@ export function SosLauncher() {
           }}
         >
           <div className="sos-modal">
+            <div className="sos-modal__handle" aria-hidden="true" />
+
             <div className="sos-modal__head">
               <h2 id="sos-modal-heading">SOS</h2>
               <button type="button" onClick={() => setIsOpen(false)} aria-label="Close">
@@ -123,12 +146,20 @@ export function SosLauncher() {
                 <span className="sos-location__icon" aria-hidden="true">
                   <MapPin size={16} strokeWidth={2} />
                 </span>
-                <span className="sos-location__text">Location sharing active</span>
+                <span className="sos-location__text">
+                  {isLocationLive ? "Location sharing active" : "Locating you..."}
+                </span>
                 <span className="live-pill">
                   <span className="live-pill__dot" aria-hidden="true" />
                   Live
                 </span>
               </div>
+
+              {dispatchError && (
+                <div className="auth-status auth-status--error sos-dispatch-error" role="alert">
+                  {dispatchError}
+                </div>
+              )}
 
               <p className="sos-modal__title">SOS is active</p>
               <p className="sos-modal__text">Help is being notified. Stay where you are if possible.</p>
@@ -185,6 +216,8 @@ export function SosLauncher() {
                   ))}
                 </div>
               </div>
+
+              <p className="sos-background-note">App will continue silently in background</p>
             </div>
           </div>
         </div>

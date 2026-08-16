@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Space_Grotesk } from "next/font/google";
+import { Inclusive_Sans } from "next/font/google";
 import { GlobalChrome } from "@/components/layout/GlobalChrome";
 import "@/styles/global.scss";
 import "@/styles/auth.scss";
@@ -9,9 +9,10 @@ import "@/styles/alerts.scss";
 import "@/styles/report.scss";
 import "@/styles/profile.scss";
 import "@/styles/sos.scss";
+import "@/styles/admin.scss";
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
+const inclusiveSans = Inclusive_Sans({
+  variable: "--font-inclusive-sans",
   subsets: ["latin"],
   display: "swap",
 });
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={spaceGrotesk.variable}>
+    <html lang="en" className={inclusiveSans.variable}>
       <body>
         <GlobalChrome>{children}</GlobalChrome>
       </body>

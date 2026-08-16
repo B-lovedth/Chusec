@@ -1,0 +1,1082 @@
+@use "variables" as *;
+@use "mixins" as *;
+
+/* ------------------------------------------------------------------ *
+ * Shared command-centre chrome
+ * ------------------------------------------------------------------ */
+
+.command-title {
+  margin: 26px 0 18px;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+
+  @include respond-to(mobile) {
+    margin: 18px 0 14px;
+    font-size: 21px;
+  }
+}
+
+.command-panel {
+  background: $panel;
+  border-radius: $r-panel;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 22px;
+
+    h2 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+  }
+
+  &__body {
+    padding: 0 12px 12px;
+  }
+}
+
+.command-card {
+  background: $surface;
+  border: 1px solid $border-soft;
+  border-radius: $r-md;
+}
+
+/* ------------------------------------------------------------------ *
+ * Stat cards
+ * ------------------------------------------------------------------ */
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 22px;
+
+  @include respond-to(desktop-sm) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @include respond-to(mobile) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid $border-soft;
+  border-radius: $r-md;
+  overflow: hidden;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 18px;
+    font-size: 15px;
+    border-bottom: 1px solid $border-soft;
+  }
+
+  &__value {
+    padding: 22px 18px 26px;
+    font-size: 26px;
+    font-weight: 600;
+  }
+
+  &__icon {
+    display: flex;
+    flex: 0 0 auto;
+  }
+
+  &--active &__icon {
+    color: $blue;
+  }
+
+  &--liveSos &__icon {
+    color: $low;
+  }
+
+  &--citizensAlerted &__icon {
+    color: $critical;
+  }
+
+  &--unitDeployed &__icon {
+    color: $high;
+  }
+
+  &--resolvedToday &__icon {
+    color: $blue;
+  }
+
+  @include respond-to(mobile) {
+    &__head {
+      padding: 11px 12px;
+      font-size: 13px;
+    }
+
+    &__value {
+      padding: 14px 12px 16px;
+      font-size: 21px;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Dashboard three-column layout
+ * ------------------------------------------------------------------ */
+
+.command-grid {
+  display: grid;
+  grid-template-columns: 344px minmax(0, 1fr) 380px;
+  gap: 16px;
+  align-items: start;
+
+  @include respond-to(desktop-sm) {
+    grid-template-columns: 300px minmax(0, 1fr);
+  }
+
+  @include respond-to(tablet) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Incident queue
+ * ------------------------------------------------------------------ */
+
+.queue {
+  background: $panel;
+  border-radius: $r-panel;
+  overflow: hidden;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 18px 22px;
+
+    h2 {
+      font-size: 17px;
+      font-weight: 600;
+    }
+  }
+
+  &__list {
+    max-height: 1230px;
+    overflow-y: auto;
+    background: $surface;
+    border-top: 1px solid $border-soft;
+
+    @include respond-to(tablet) {
+      max-height: 460px;
+    }
+  }
+}
+
+.queue-item {
+  display: block;
+  width: 100%;
+  padding: 16px 20px;
+  text-align: left;
+  border-bottom: 1px solid $border-soft;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background: #fafbfc;
+  }
+
+  &.is-selected {
+    background: #eaf3fd;
+  }
+
+  &__top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+    color: $text-muted;
+  }
+
+  &__body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  &__title {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  &__location {
+    margin-top: 4px;
+    font-size: 13px;
+    color: $text-muted;
+  }
+}
+
+.badge-new {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 6px;
+  background: $blue;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badge-sos {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  height: 26px;
+  padding: 0 12px;
+  border-radius: 6px;
+  background: #ef4136;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-resolved {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  height: 26px;
+  padding: 0 14px;
+  border-radius: 6px;
+  background: $blue;
+  color: #fff;
+  font-size: 12.5px;
+}
+
+/* ------------------------------------------------------------------ *
+ * Command map
+ * ------------------------------------------------------------------ */
+
+.command-map {
+  position: relative;
+  height: 464px;
+  border-radius: $r-md;
+  overflow: hidden;
+  background: #eaf0f3;
+
+  @include respond-to(mobile) {
+    height: 300px;
+  }
+
+  &__canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.map-marker {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--marker, #ef4136);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.55);
+  transition: transform 0.15s ease;
+
+  &:hover {
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+
+  &.is-selected {
+    box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.85), 0 0 0 8px rgba(239, 65, 54, 0.35);
+  }
+}
+
+.heat-legend {
+  position: absolute;
+  left: 22px;
+  bottom: 22px;
+  width: 148px;
+  padding: 12px 14px 14px;
+  background: $surface;
+  border-radius: $r-xs;
+  box-shadow: 0 2px 10px rgba(16, 24, 40, 0.14);
+
+  &__title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-top: 10px;
+  }
+}
+
+.map-popup {
+  position: absolute;
+  width: 278px;
+  padding: 14px 16px 16px;
+  background: $surface;
+  border-radius: $r-sm;
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.16);
+
+  &__meta {
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    color: $text-muted;
+  }
+
+  &__title {
+    margin-top: 6px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  &__location {
+    margin-top: 2px;
+    font-size: 11.5px;
+    color: $text-soft;
+  }
+
+  &__note {
+    margin-top: 8px;
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: $text-muted;
+  }
+
+  &__tail {
+    position: absolute;
+    left: 30px;
+    bottom: -9px;
+    width: 18px;
+    height: 10px;
+    background: $surface;
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Charts
+ * ------------------------------------------------------------------ */
+
+.chart-card {
+  margin-top: 16px;
+  padding: 20px 22px 22px;
+  background: $panel;
+  border-radius: $r-panel;
+
+  &__title {
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  &__plot {
+    margin-top: 18px;
+    padding: 16px 14px 10px;
+    background: $surface;
+    border: 1px solid $border-soft;
+    border-radius: $r-md;
+  }
+
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+}
+
+.chart-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  margin-top: 14px;
+  font-size: 13px;
+  color: $text-muted;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+}
+
+.chart-tooltip {
+  pointer-events: none;
+
+  &__box {
+    fill: $surface;
+    stroke: $border-soft;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Detail / Broadcast panel
+ * ------------------------------------------------------------------ */
+
+.detail-panel {
+  background: $panel;
+  border-radius: $r-panel;
+  overflow: hidden;
+}
+
+.detail-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 10px;
+
+  button {
+    height: 42px;
+    border-radius: $r-xs;
+    font-size: 15px;
+    color: $text-soft;
+
+    &.is-active {
+      background: $surface;
+      color: $text;
+      font-weight: 600;
+      box-shadow: $shadow-card;
+    }
+  }
+}
+
+.detail-body {
+  margin: 0 10px 10px;
+  padding: 18px 18px 22px;
+  background: $surface;
+  border: 1px solid $border-soft;
+  border-radius: $r-md;
+}
+
+.detail-posted {
+  display: flex;
+  justify-content: flex-end;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    height: 30px;
+    padding: 0 14px;
+    border: 1px solid $border-soft;
+    border-radius: 6px;
+    font-size: 12.5px;
+  }
+}
+
+.detail-ref {
+  margin-top: 16px;
+  font-size: 13px;
+  color: $text-muted;
+}
+
+.detail-heading {
+  margin-top: 6px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.detail-location {
+  margin-top: 4px;
+  font-size: 13.5px;
+  color: $text-muted;
+}
+
+.detail-narrative {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: $critical-bg;
+  border-radius: $r-xs;
+  color: $critical;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.detail-section-label {
+  margin-top: 22px;
+  font-size: 13px;
+  color: $text-muted;
+}
+
+.evidence-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: $panel;
+  border-radius: $r-xs;
+
+  &__thumb {
+    @include flex-center;
+    flex: 0 0 auto;
+    width: 34px;
+    height: 30px;
+    border-radius: 5px;
+    background: #d7dde3;
+    color: $text-soft;
+  }
+
+  &__name {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 13.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 10px;
+    color: $text-soft;
+
+    button:hover {
+      color: $text;
+    }
+  }
+}
+
+.status-select {
+  margin-top: 10px;
+  border: 1px solid $border;
+  border-radius: $r-xs;
+  overflow: hidden;
+
+  &__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 12px 14px;
+    color: $text-soft;
+  }
+
+  &__options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 14px 16px;
+    border-top: 1px solid $border-soft;
+  }
+
+  &__option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  &__check {
+    @include flex-center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: $text;
+    color: #fff;
+  }
+}
+
+.resolve-button {
+  @include flex-center;
+  gap: 10px;
+  width: 100%;
+  height: 52px;
+  margin-top: 22px;
+  border-radius: $r-pill;
+  background: #a9d0f5;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+
+  &:not(:disabled):hover {
+    background: $blue;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+
+  &.is-ready {
+    background: $blue;
+  }
+}
+
+.forces-label {
+  margin: 24px 0 12px;
+  font-size: 14px;
+  color: $text-muted;
+}
+
+.force-card {
+  padding: 14px 16px 16px;
+  border: 1px solid $border-soft;
+  border-radius: $r-md;
+
+  & + & {
+    margin-top: 12px;
+  }
+
+  &__station {
+    margin-top: 10px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  &__address {
+    margin-top: 3px;
+    font-size: 12.5px;
+    color: $text-muted;
+  }
+
+  &__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  &__contact {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+}
+
+.alert-force-button {
+  flex: 0 0 auto;
+  height: 28px;
+  padding: 0 14px;
+  border-radius: 6px;
+  background: #ef4136;
+  color: #fff;
+  font-size: 12.5px;
+
+  &:hover {
+    background: #d63a30;
+  }
+}
+
+.agency-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 11px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  white-space: nowrap;
+
+  &--police {
+    background: #e6f7ee;
+    color: #0f9d58;
+  }
+
+  &--dss {
+    background: #f3e8fd;
+    color: #8b5cf6;
+  }
+
+  &--nscdc {
+    background: #fdf1e5;
+    color: #e07b26;
+  }
+
+  &--immigration {
+    background: #e7f0fe;
+    color: #2563eb;
+  }
+
+  &--custom {
+    background: #e4f6fb;
+    color: #0891b2;
+  }
+
+  &--correctional {
+    background: #fdeaf6;
+    color: #c2419b;
+  }
+
+  &--ndlea {
+    background: #fdecea;
+    color: #dc2626;
+  }
+
+  &--frsc {
+    background: #eceafd;
+    color: #6366f1;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Data tables (User access + Unit)
+ * ------------------------------------------------------------------ */
+
+.table-shell {
+  margin: 0 12px 12px;
+  background: $surface;
+  border: 1px solid $border-soft;
+  border-radius: $r-md;
+  overflow: hidden;
+}
+
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+
+  @include respond-to(mobile) {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px;
+  }
+}
+
+.table-search {
+  flex: 1 1 auto;
+  max-width: 456px;
+  height: 42px;
+
+  @include respond-to(mobile) {
+    max-width: none;
+    flex: 1 1 100%;
+  }
+}
+
+.table-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  height: 42px;
+  padding: 0 12px;
+  background: $panel;
+  border-radius: $r-xs;
+  font-size: 14px;
+
+  &__label {
+    color: $text-soft;
+  }
+
+  select {
+    border: none;
+    background: none;
+    outline: none;
+    color: $blue;
+    cursor: pointer;
+  }
+}
+
+.table-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  height: 42px;
+  margin-left: auto;
+  padding: 0 18px;
+  border-radius: $r-xs;
+  background: $blue;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+
+  &:hover {
+    background: $blue-hover;
+  }
+}
+
+.data-table-wrap {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  th {
+    padding: 14px 16px;
+    background: #fbfbfc;
+    border-top: 1px solid $border-soft;
+    border-bottom: 1px solid $border-soft;
+    text-align: left;
+    font-weight: 500;
+    color: $text-soft;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 14px 16px;
+    border-bottom: 1px solid $border-soft;
+    vertical-align: middle;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  &__name {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__sub {
+    margin-top: 2px;
+    font-size: 12px;
+    color: $text-muted;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 10px;
+  }
+}
+
+.avatar-chip {
+  @include flex-center;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: $blue-tint;
+  color: $blue;
+  font-size: 11px;
+  font-weight: 600;
+  overflow: hidden;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 14px;
+  border-radius: 6px;
+  font-size: 13px;
+
+  &--active {
+    background: $low-bg;
+    color: #0f9d58;
+  }
+
+  &--pending {
+    background: #fdf3e3;
+    color: #d98207;
+  }
+}
+
+.row-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid $border;
+  border-radius: 6px;
+  font-size: 13px;
+  background: $surface;
+
+  &:hover {
+    background: $panel;
+  }
+
+  &--danger {
+    border-color: #f6c9c5;
+    color: $critical;
+
+    &:hover {
+      background: $critical-bg;
+    }
+  }
+}
+
+.row-toggle {
+  @include flex-center;
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  color: $text-soft;
+
+  &:hover {
+    background: $panel;
+  }
+}
+
+.expanded-row td {
+  padding: 0;
+  background: #f7fafd;
+}
+
+.expanded-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  padding: 20px 24px 24px;
+
+  @include respond-to(tablet) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    color: $blue;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  &__value {
+    font-size: 14px;
+  }
+}
+
+.responder-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: $text-soft;
+
+  & + & {
+    margin-top: 8px;
+  }
+}
+
+.lead-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid $blue;
+  border-radius: 4px;
+  background: $blue-tint;
+  color: $blue;
+  font-size: 11.5px;
+}
+
+.vehicle-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  margin: 0 8px 8px 0;
+  background: $panel;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px;
+  font-size: 14px;
+  color: $text-soft;
+
+  &__pages {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__page {
+    @include flex-center;
+    min-width: 30px;
+    height: 30px;
+    padding: 0 8px;
+    border-radius: 6px;
+    color: $text;
+
+    &:hover:not(:disabled) {
+      background: $panel;
+    }
+
+    &.is-active {
+      background: $blue;
+      color: #fff;
+    }
+
+    &:disabled {
+      color: $text-muted;
+      cursor: not-allowed;
+    }
+  }
+
+  &__goto {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    select {
+      height: 30px;
+      padding: 0 6px;
+      border: 1px solid $border;
+      border-radius: 6px;
+      background: $surface;
+      outline: none;
+    }
+  }
+
+  @include respond-to(tablet) {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Broadcast tab
+ * ------------------------------------------------------------------ */
+
+.broadcast-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  textarea {
+    width: 100%;
+    height: 120px;
+    padding: 12px 14px;
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: $r-sm;
+    resize: vertical;
+    outline: none;
+    font-size: 14px;
+
+    &:focus {
+      border-color: $blue;
+      box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.12);
+    }
+  }
+}

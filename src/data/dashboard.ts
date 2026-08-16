@@ -21,8 +21,8 @@ export type IncidentItem = {
 
 export type TransitCorridor = {
   id: number;
-  from: string;
-  to: string;
+  /** Pre-formatted for display, e.g. `Warri → Asaba (A232)`. */
+  name: string;
   description: string;
   distance: string;
   severity: Severity;
@@ -58,32 +58,28 @@ export const nearbyIncidents: IncidentItem[] = [
 export const transitCorridors: TransitCorridor[] = [
   {
     id: 1,
-    from: "Warri",
-    to: "Asaba",
+    name: "Warri → Asaba",
     description: "High-Alert Polygon · 3 incidents today",
     distance: "142 km",
     severity: "Critical",
   },
   {
     id: 2,
-    from: "Benin",
-    to: "Auchi",
+    name: "Benin → Auchi",
     description: "High-Alert Polygon · 2 incidents today",
     distance: "111 km",
     severity: "High",
   },
   {
     id: 3,
-    from: "Asaba",
-    to: "Agbor",
+    name: "Asaba → Agbor",
     description: "Fake checkpoint unconfirmed",
     distance: "47 km",
     severity: "Medium",
   },
   {
     id: 4,
-    from: "Benin",
-    to: "Sapele",
+    name: "Benin → Sapele",
     description: "Clear",
     distance: "72 km",
     severity: "Low",

@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { BadgeCheck } from "lucide-react";
 import { clearPendingVerificationEmail } from "@/lib/pending-verification";
 
-const REDIRECT_SECONDS = 5;
+const REDIRECT_SECONDS = 3;
 
 export function VerifiedNotice() {
   const router = useRouter();
@@ -18,7 +18,8 @@ export function VerifiedNotice() {
 
   useEffect(() => {
     if (secondsLeft <= 0) {
-      router.push("/auth/login");
+      // `replace` so Back does not land on the spent verification link.
+      router.replace("/auth/login");
       return;
     }
 

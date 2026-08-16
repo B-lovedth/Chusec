@@ -1,42 +1,93 @@
-const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://jsonplaceholder.typicode.com";
+import { clearAccessToken, getAccessToken } from "@/lib/session";
 
-export type ApiRequestOptions = RequestInit & {
+const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://chusec.onrender.com";
+
+export type ApiRequestOptions = Omit<RequestInit, "body"> & {
   params?: Record<string, string | number | boolean | null | undefined>;
+  /** Plain object is JSON-encoded; FormData is sent as-is for uploads. */
+  body?: unknown;
+  /** Skip the Authorization header even when a token is stored. */
+  anonymous?: boolean;
 };
 
+export class ApiError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
+type ValidationDetail = { loc?: (string | number)[]; msg?: string };
+
+/**
+ * FastAPI reports errors as `{ detail }`, where detail is either a string or
+ * an array of validation objects.
+ */
+function readErrorMessage(payload: unknown, status: number): string {
+  if (payload && typeof payload === "object" && "detail" in payload) {
+    const detail = (payload as { detail: unknown }).detail;
+
+    if (typeof detail === "string") return detail;
+
+    if (Array.isArray(detail)) {
+      const messages = (detail as ValidationDetail[])
+        .map((item) => {
+          const field = item.loc?.filter((part) => part !== "body").join(".");
+          return field ? `${field}: ${item.msg ?? "is invalid"}` : item.msg;
+        })
+        .filter(Boolean);
+
+      if (messages.length) return messages.join("\n");
+    }
+  }
+
+  return `Request failed with status ${status}`;
+}
+
+function buildUrl(path: string, params: ApiRequestOptions["params"]) {
+  const base = path.startsWith("http")
+    ? path
+    : `${DEFAULT_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+
+  if (!params) return base;
+
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) query.set(key, String(value));
+  });
+
+  const queryString = query.toString();
+  return queryString ? `${base}?${queryString}` : base;
+}
+
 export async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
-  const url = path.startsWith("http") ? path : `${DEFAULT_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+  const { params, body, anonymous, headers, ...rest } = options;
 
-  const queryString = options.params
-    ? new URLSearchParams(
-        Object.entries(options.params).reduce<Record<string, string>>((accumulator, [key, value]) => {
-          if (value !== undefined && value !== null) {
-            accumulator[key] = String(value);
-          }
-          return accumulator;
-        }, {}),
-      ).toString()
-    : "";
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+  const requestHeaders = new Headers(headers);
 
-  const requestUrl = queryString ? `${url}?${queryString}` : url;
+  if (body !== undefined && !isFormData) requestHeaders.set("Content-Type", "application/json");
 
-  const response = await fetch(requestUrl, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers ?? {}),
-    },
+  if (!anonymous) {
+    const token = getAccessToken();
+    if (token) requestHeaders.set("Authorization", `Bearer ${token}`);
+  }
+
+  const response = await fetch(buildUrl(path, params), {
+    ...rest,
+    headers: requestHeaders,
+    body: isFormData ? (body as FormData) : body !== undefined ? JSON.stringify(body) : undefined,
   });
 
   const payload = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const message =
-      payload && typeof payload === "object" && "message" in payload
-        ? String((payload as { message?: string }).message)
-        : `Request failed with status ${response.status}`;
-
-    throw new Error(message);
+    // A rejected token is worthless — drop it so the UI can prompt a re-login.
+    if (response.status === 401) clearAccessToken();
+    throw new ApiError(readErrorMessage(payload, response.status), response.status);
   }
 
   return (payload ?? ({} as T)) as T;

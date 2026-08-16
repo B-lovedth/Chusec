@@ -76,7 +76,19 @@
   }
 
   @include respond-to(mobile) {
-    padding: 14px 14px;
+    padding: 12px 14px;
+
+    &__title {
+      font-size: 14px;
+    }
+
+    &__time {
+      font-size: 11px;
+    }
+
+    &__message {
+      font-size: 12.5px;
+    }
   }
 }
 

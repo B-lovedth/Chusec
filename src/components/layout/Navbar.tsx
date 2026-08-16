@@ -5,20 +5,40 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Bell, ChevronDown, LogOut, Settings, User } from "lucide-react";
-import { currentUser } from "@/data/dashboard";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { clearAccessToken } from "@/lib/session";
 
-const navItems = [
+export type NavItem = {
+  label: string;
+  href: string;
+};
+
+const citizenNavItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard" },
   { label: "Alerts", href: "/alerts" },
   { label: "Report", href: "/report" },
   { label: "Profile", href: "/profile" },
 ];
 
-export function Navbar() {
+type NavbarProps = {
+  /** Defaults to the citizen tabs; the command centre passes its own. */
+  items?: NavItem[];
+  profileHref?: string;
+  /** Command centre is desktop-first and keeps its nav at every width. */
+  alwaysVisible?: boolean;
+};
+
+export function Navbar({
+  items = citizenNavItems,
+  profileHref = "/profile",
+  alwaysVisible = false,
+}: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const navItems = items;
   const [menuOpen, setMenuOpen] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
+  const { user } = useCurrentUser();
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -42,13 +62,13 @@ export function Navbar() {
 
   const handleLogout = () => {
     setMenuOpen(false);
-    // Mock sign-out — clear the real session/token here once auth is wired up.
+    clearAccessToken();
     router.push("/auth/login");
   };
 
   return (
-    <header className="topbar">
-      <Link href="/dashboard" aria-label="Chusec home">
+    <header className={alwaysVisible ? "topbar topbar--persistent" : "topbar"}>
+      <Link href={navItems[0]?.href ?? "/dashboard"} aria-label="Chusec home">
         <Image src="/logo.png" alt="Chusec" width={103} height={40} className="topbar__logo" priority />
       </Link>
 
@@ -84,15 +104,15 @@ export function Navbar() {
             aria-label="Account menu"
             onClick={() => setMenuOpen((current) => !current)}
           >
-            <Image src={currentUser.avatar} alt="" width={42} height={42} />
-            <span className="topbar__user__name">{currentUser.firstName}</span>
+            <Image src={user.avatar} alt="" width={42} height={42} unoptimized />
+            <span className="topbar__user__name">{user.firstName}</span>
             <ChevronDown size={16} strokeWidth={2} className="topbar__user__chevron" />
           </button>
 
           {menuOpen && (
             <div className="topbar__menu" role="menu">
               <Link
-                href="/profile"
+                href={profileHref}
                 role="menuitem"
                 className="topbar__menu__item"
                 onClick={() => setMenuOpen(false)}
@@ -102,7 +122,7 @@ export function Navbar() {
               </Link>
 
               <Link
-                href="/profile"
+                href={profileHref}
                 role="menuitem"
                 className="topbar__menu__item"
                 onClick={() => setMenuOpen(false)}

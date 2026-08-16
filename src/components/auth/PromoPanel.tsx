@@ -32,7 +32,7 @@ export function PromoPanel() {
     >
       <div className="promo-panel__viewport">
         <article className="promo-slide" data-state="active" key={slide.id} aria-live="polite">
-          <SlideArt art={slide.art} />
+          <SlideArt slide={slide} />
           <div>
             <h2>{slide.title}</h2>
             <p>{slide.description}</p>

@@ -3,17 +3,18 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Lock, Phone, ScanFace } from "lucide-react";
+import { AtSign, Lock, ScanFace } from "lucide-react";
 import { AuthBrand } from "@/components/auth/AuthBrand";
+import { BackButton } from "@/components/auth/BackButton";
 import { TextField } from "@/components/ui/TextField";
 import { loginUser } from "@/services/auth.service";
-import { isValidNigerianPhone } from "@/lib/validation";
+import { isValidEmail, isValidNigerianPhone } from "@/lib/validation";
 
-type Errors = Partial<Record<"phoneNumber" | "password", string>>;
+type Errors = Partial<Record<"identifier" | "password", string>>;
 
 export function LoginForm() {
   const router = useRouter();
-  const [form, setForm] = useState({ phoneNumber: "", password: "" });
+  const [form, setForm] = useState({ identifier: "", password: "" });
   const [errors, setErrors] = useState<Errors>({});
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,8 +27,13 @@ export function LoginForm() {
 
   const validate = () => {
     const next: Errors = {};
-    if (!isValidNigerianPhone(form.phoneNumber)) next.phoneNumber = "Enter a valid Nigerian phone number.";
+    const identifier = form.identifier.trim();
+
+    if (!isValidEmail(identifier) && !isValidNigerianPhone(identifier)) {
+      next.identifier = "Enter your email address or phone number.";
+    }
     if (!form.password) next.password = "Enter your password.";
+
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -49,20 +55,21 @@ export function LoginForm() {
 
   return (
     <div className="auth-card">
+      <BackButton />
       <AuthBrand title="Login to your account" />
 
       <form className="login-form" onSubmit={handleSubmit} noValidate>
         <TextField
-          label="Phone number"
-          name="phoneNumber"
-          type="tel"
+          label="Email or phone number"
+          name="identifier"
+          type="text"
           required
-          value={form.phoneNumber}
+          value={form.identifier}
           onChange={handleChange}
-          placeholder="08181804434"
-          autoComplete="tel"
-          error={errors.phoneNumber}
-          icon={<Phone size={17} strokeWidth={1.8} />}
+          placeholder="chidiokafor@gmail.com"
+          autoComplete="username"
+          error={errors.identifier}
+          icon={<AtSign size={17} strokeWidth={1.8} />}
         />
 
         <TextField
