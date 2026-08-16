@@ -7,7 +7,8 @@ import { SubmitChoiceModal } from "@/components/report/SubmitChoiceModal";
 import { submitReport, uploadEvidence } from "@/services/incidents.service";
 import { getCurrentCoordinates, toApiPoint } from "@/lib/geolocation";
 import { isAuthenticated } from "@/lib/session";
-import { currentUser, type Severity } from "@/data/dashboard";
+import { useUser } from "@/components/auth/RouteGuard";
+import type { Severity } from "@/data/dashboard";
 
 type Status = { type: "success" | "error"; message: string } | null;
 
@@ -17,10 +18,11 @@ type ReportFormProps = {
 };
 
 export function ReportForm({ isAnonymous, onAnonymousChange }: ReportFormProps) {
+  const user = useUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [incidentType, setIncidentType] = useState<IncidentType>(incidentTypes[0]);
   const [severity, setSeverity] = useState<Severity>("High");
-  const [location, setLocation] = useState(currentUser.location);
+  const [location, setLocation] = useState(user.location);
   const [description, setDescription] = useState("");
   const [evidence, setEvidence] = useState<File | null>(null);
   const [status, setStatus] = useState<Status>(null);

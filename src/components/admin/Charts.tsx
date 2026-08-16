@@ -1,7 +1,8 @@
 "use client";
 
 import { useId, useState } from "react";
-import { incidentsPerHour, weeklyResolution } from "@/data/admin";
+
+export type WeeklySeries = { day: string; incidents: number; dispatched: number };
 
 const AXIS = "#9aa0a6";
 const GRID = "#eceef0";
@@ -31,11 +32,12 @@ const LINE_W = 620;
 const LINE_H = 210;
 const LINE_PAD = { top: 12, right: 16, bottom: 30, left: 40 };
 
-export function IncidentsPerHourChart() {
+export function IncidentsPerHourChart({ series }: { series: number[] }) {
   const gradientId = useId();
-  const [hovered, setHovered] = useState<number | null>(12);
+  const [hovered, setHovered] = useState<number | null>(null);
 
-  const yMax = 16;
+  const incidentsPerHour = series.length === 24 ? series : new Array(24).fill(0);
+  const yMax = Math.max(4, Math.ceil(Math.max(...incidentsPerHour) / 4) * 4);
   const innerW = LINE_W - LINE_PAD.left - LINE_PAD.right;
   const innerH = LINE_H - LINE_PAD.top - LINE_PAD.bottom;
 
@@ -68,7 +70,7 @@ export function IncidentsPerHourChart() {
             </linearGradient>
           </defs>
 
-          {[0, 4, 8, 12, 16].map((tick) => {
+          {[0, yMax / 4, yMax / 2, (yMax * 3) / 4, yMax].map((tick) => {
             const y = LINE_PAD.top + innerH - (tick / yMax) * innerH;
             return (
               <g key={tick}>
@@ -153,10 +155,12 @@ const BAR_W = 620;
 const BAR_H = 230;
 const BAR_PAD = { top: 12, right: 16, bottom: 34, left: 40 };
 
-export function WeeklyResolutionChart() {
-  const [hovered, setHovered] = useState<number | null>(3);
+export function WeeklyResolutionChart({ data }: { data: WeeklySeries[] }) {
+  const [hovered, setHovered] = useState<number | null>(null);
 
-  const yMax = 24;
+  const weeklyResolution = data;
+  const peak = Math.max(1, ...weeklyResolution.flatMap((e) => [e.incidents, e.dispatched]));
+  const yMax = Math.ceil(peak / 6) * 6;
   const innerW = BAR_W - BAR_PAD.left - BAR_PAD.right;
   const innerH = BAR_H - BAR_PAD.top - BAR_PAD.bottom;
   const slot = innerW / weeklyResolution.length;
@@ -170,10 +174,10 @@ export function WeeklyResolutionChart() {
         <svg
           viewBox={`0 0 ${BAR_W} ${BAR_H}`}
           role="img"
-          aria-label="Incidents reported versus resolved, by weekday"
+          aria-label="Incidents reported versus units dispatched, by weekday"
           onMouseLeave={() => setHovered(null)}
         >
-          {[0, 6, 12, 18, 24].map((tick) => {
+          {[0, yMax / 4, yMax / 2, (yMax * 3) / 4, yMax].map((tick) => {
             const y = BAR_PAD.top + innerH - (tick / yMax) * innerH;
             return (
               <g key={tick}>
@@ -195,7 +199,7 @@ export function WeeklyResolutionChart() {
           {weeklyResolution.map((entry, index) => {
             const centre = BAR_PAD.left + slot * index + slot / 2;
             const incidentsH = (entry.incidents / yMax) * innerH;
-            const resolvedH = (entry.resolved / yMax) * innerH;
+            const resolvedH = (entry.dispatched / yMax) * innerH;
             const baseline = BAR_PAD.top + innerH;
 
             return (
@@ -258,7 +262,7 @@ export function WeeklyResolutionChart() {
                 Incidents : {weeklyResolution[hovered].incidents}
               </text>
               <text x="12" y="48" fontSize="10" fill="#22c55e">
-                Resolved : {weeklyResolution[hovered].resolved}
+                Dispatched : {weeklyResolution[hovered].dispatched}
               </text>
             </g>
           )}
@@ -270,7 +274,7 @@ export function WeeklyResolutionChart() {
           <i style={{ background: "#ef4136" }} /> Incidents
         </span>
         <span>
-          <i style={{ background: "#22c55e" }} /> Resolved
+          <i style={{ background: "#22c55e" }} /> Dispatched
         </span>
       </div>
     </section>

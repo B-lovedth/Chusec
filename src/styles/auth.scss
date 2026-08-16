@@ -173,11 +173,16 @@
   min-height: 100dvh;
   display: grid;
   grid-template-columns: minmax(360px, 460px) 1fr;
-  max-width: $app-max-width;
-  margin: 0 auto;
-  /* No right padding: it keeps the form column centred on the space left of
-     the panel, matching the design's 965px centre line at 1440px. */
-  padding: 36px 0 36px 30px;
+  /* Full-bleed white — capping the element itself would let the page
+     background show down both sides on wide screens. The padding keeps the
+     content capped at $app-max-width and centred instead.
+     `100%` rather than `100vw` so a scrollbar cannot cause overflow.
+     The left gutter stays 30px and the right 0, which is what puts the form
+     column on the design's 965px centre line at 1440px. */
+  padding-top: 36px;
+  padding-bottom: 36px;
+  padding-left: max(30px, calc((100% - #{$app-max-width}) / 2 + 30px));
+  padding-right: max(0px, calc((100% - #{$app-max-width}) / 2));
   background: $surface;
 
   @include respond-to(tablet) {
@@ -523,6 +528,11 @@
     background: $critical-bg;
     color: $critical;
   }
+}
+
+.route-guard {
+  @include flex-center;
+  min-height: 60vh;
 }
 
 .spinner {

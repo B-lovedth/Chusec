@@ -5,8 +5,8 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Bell, ChevronDown, LogOut, Settings, User } from "lucide-react";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { clearAccessToken } from "@/lib/session";
+import { useSession } from "@/components/auth/SessionProvider";
+
 
 export type NavItem = {
   label: string;
@@ -38,7 +38,7 @@ export function Navbar({
   const navItems = items;
   const [menuOpen, setMenuOpen] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
-  const { user } = useCurrentUser();
+  const { user, signOut } = useSession();
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -62,8 +62,8 @@ export function Navbar({
 
   const handleLogout = () => {
     setMenuOpen(false);
-    clearAccessToken();
-    router.push("/auth/login");
+    signOut();
+    router.replace("/auth/login");
   };
 
   return (
@@ -104,8 +104,8 @@ export function Navbar({
             aria-label="Account menu"
             onClick={() => setMenuOpen((current) => !current)}
           >
-            <Image src={user.avatar} alt="" width={42} height={42} unoptimized />
-            <span className="topbar__user__name">{user.firstName}</span>
+            <Image src={user?.avatar ?? "/avatar-placeholder.svg"} alt="" width={42} height={42} unoptimized />
+            <span className="topbar__user__name">{user?.firstName ?? ""}</span>
             <ChevronDown size={16} strokeWidth={2} className="topbar__user__chevron" />
           </button>
 

@@ -7,11 +7,11 @@
 
 .sos-fab {
   position: fixed;
-  top: 50%;
-  /* Sits just inside the capped content column on wide screens. */
-  right: max(50px, calc((100vw - #{$app-max-width}) / 2 + 50px));
-  z-index: 40;
-  transform: translateY(-50%);
+ top: auto;
+bottom: 50px;
+right: auto;
+left: max(50px, calc((100vw - 1440px) / 2 + 50px));
+transform: none;
   @include flex-center(column);
   gap: 1px;
   width: 90px;

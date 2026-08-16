@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { Navbar, type NavItem } from "@/components/layout/Navbar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { SosLauncher } from "@/components/sos/SosLauncher";
+import { SessionProvider } from "@/components/auth/SessionProvider";
+import { RouteGuard } from "@/components/auth/RouteGuard";
 
 const commandNavItems: NavItem[] = [
   { label: "Dashboard", href: "/admin/dashboard" },
@@ -18,19 +20,15 @@ type GlobalChromeProps = {
   children: ReactNode;
 };
 
-export function GlobalChrome({ children }: GlobalChromeProps) {
+function AppChrome({ children }: GlobalChromeProps) {
   const pathname = usePathname();
-  const isAuthRoute = pathname.startsWith("/auth");
-  const isCommandRoute = pathname.startsWith("/admin");
-
-  if (isAuthRoute) return <>{children}</>;
 
   // The command centre is desktop-first: no bottom tab bar, no SOS launcher.
-  if (isCommandRoute) {
+  if (pathname.startsWith("/admin")) {
     return (
       <>
         <Navbar items={commandNavItems} profileHref="/admin/profile" alwaysVisible />
-        {children}
+        <RouteGuard>{children}</RouteGuard>
       </>
     );
   }
@@ -38,9 +36,19 @@ export function GlobalChrome({ children }: GlobalChromeProps) {
   return (
     <>
       <Navbar />
-      {children}
+      <RouteGuard>{children}</RouteGuard>
       <SosLauncher />
       <BottomNav />
     </>
+  );
+}
+
+export function GlobalChrome({ children }: GlobalChromeProps) {
+  const pathname = usePathname();
+
+  return (
+    <SessionProvider>
+      {pathname.startsWith("/auth") ? children : <AppChrome>{children}</AppChrome>}
+    </SessionProvider>
   );
 }

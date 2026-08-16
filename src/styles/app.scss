@@ -275,6 +275,7 @@
 
   &__name {
     font-size: 15px;
+    text-transform: capitalize;
   }
 
   &__chevron {
@@ -343,6 +344,7 @@
     font-size: 26px;
     font-weight: 700;
     letter-spacing: -0.01em;
+    text-transform: capitalize;
   }
 
   &__subtitle {
@@ -499,6 +501,17 @@
   }
 }
 
+.list-message {
+  padding: 28px 20px;
+  text-align: center;
+  font-size: 14px;
+  color: $text-muted;
+
+  &--error {
+    color: $critical;
+  }
+}
+
 .skeleton {
   display: block;
   border-radius: $r-pill;
@@ -526,6 +539,12 @@
   &--badge {
     width: 82px;
     height: 26px;
+    border-radius: 6px;
+  }
+
+  &--stat {
+    width: 64px;
+    height: 24px;
     border-radius: 6px;
   }
 }

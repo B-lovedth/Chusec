@@ -4,7 +4,9 @@ import { Fragment, useMemo, useState } from "react";
 import { Car, ChevronDown, ChevronRight, MapPin, Plus, Search, Target, Users } from "lucide-react";
 import { Pagination } from "@/components/admin/Pagination";
 import { AgencyBadge } from "@/components/admin/IncidentDetailPanel";
-import { securityUnits, type Agency } from "@/data/admin";
+import { useApiList } from "@/hooks/useApiList";
+import { loadSecurityUnits } from "@/data/loaders";
+import type { Agency } from "@/data/admin";
 
 const TOTAL_PAGES = 16;
 
@@ -23,7 +25,8 @@ export default function UnitPage() {
   const [query, setQuery] = useState("");
   const [agency, setAgency] = useState<Agency | "All">("All");
   const [page, setPage] = useState(4);
-  const [expanded, setExpanded] = useState<string[]>([securityUnits[0].id]);
+  const [expanded, setExpanded] = useState<string[]>([]);
+  const { status, items: securityUnits, error } = useApiList(loadSecurityUnits);
 
   const visible = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -34,7 +37,7 @@ export default function UnitPage() {
       const matchesAgency = agency === "All" || unit.agency === agency;
       return matchesQuery && matchesAgency;
     });
-  }, [query, agency]);
+  }, [query, agency, securityUnits]);
 
   const toggle = (id: string) => {
     setExpanded((current) =>
@@ -195,7 +198,11 @@ export default function UnitPage() {
                 {visible.length === 0 && (
                   <tr>
                     <td colSpan={8} style={{ padding: 32, textAlign: "center", color: "#9aa0a6" }}>
-                      No units match that search.
+                      {status === "loading"
+                        ? "Loading units..."
+                        : status === "error"
+                          ? error
+                          : "No units match that search."}
                     </td>
                   </tr>
                 )}

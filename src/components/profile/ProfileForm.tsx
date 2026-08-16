@@ -1,11 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import { useRef, useState } from "react";
 import { SquarePen } from "lucide-react";
+import { AvatarUploader } from "@/components/profile/AvatarUploader";
 import { TextField } from "@/components/ui/TextField";
 import { updateProfile } from "@/services/auth.service";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useUser } from "@/components/auth/RouteGuard";
+import { useSession } from "@/components/auth/SessionProvider";
 import type { UserProfile } from "@/data/dashboard";
 
 const NIN_LENGTH = 11;
@@ -31,7 +32,8 @@ function toDraft(user: UserProfile): ProfileDraft {
 }
 
 export function ProfileForm() {
-  const { user } = useCurrentUser();
+  const user = useUser();
+  const { refresh } = useSession();
   const [isEditing, setIsEditing] = useState(false);
   // Derived from the loaded profile until the user saves their own edit, so a
   // late-arriving API response is picked up without an effect.
@@ -88,6 +90,8 @@ export function ProfileForm() {
       setSavedOverride(draft);
       setIsEditing(false);
       setStatus({ type: "success", message: "Profile updated." });
+      // Pull the saved profile back through the session so the navbar updates.
+      refresh();
     } catch (error) {
       setStatus({
         type: "error",
@@ -103,14 +107,7 @@ export function ProfileForm() {
   return (
     <>
       <section className="profile-identity">
-        <Image
-          className="profile-identity__avatar"
-          src={user.avatar}
-          alt=""
-          width={120}
-          height={120}
-          unoptimized
-        />
+        <AvatarUploader src={user.avatar} onUploaded={refresh} />
 
         <div>
           <p className="profile-identity__name">

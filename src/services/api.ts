@@ -1,6 +1,8 @@
 import { clearAccessToken, getAccessToken } from "@/lib/session";
 
-const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://chusec.onrender.com";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://chusec.onrender.com";
+
+const DEFAULT_BASE_URL = API_BASE_URL;
 
 export type ApiRequestOptions = Omit<RequestInit, "body"> & {
   params?: Record<string, string | number | boolean | null | undefined>;

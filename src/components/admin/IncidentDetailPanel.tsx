@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { Check, ChevronDown, ChevronUp, Download, Eye, Film, ShieldCheck, UserRound } from "lucide-react";
 import { SeverityBadge } from "@/components/ui/SeverityBadge";
-import { nearestForces, type Agency, type CommandIncident } from "@/data/admin";
+import { ListState } from "@/components/ui/ListState";
+import { useApiList } from "@/hooks/useApiList";
+import { loadSecurityUnits } from "@/data/loaders";
+import { broadcastIncident, dispatchUnit, resolveIncident } from "@/services/incidents.service";
+import type { Agency, CommandIncident } from "@/data/admin";
 import type { Severity } from "@/data/dashboard";
 
 const statuses: Severity[] = ["Critical", "Medium", "High", "Low"];
@@ -23,18 +27,75 @@ export function AgencyBadge({ agency }: { agency: Agency }) {
   return <span className={`agency-badge agency-badge--${agencyModifier[agency]}`}>{agency}</span>;
 }
 
+const BROADCAST_RANGE_KM = 10;
+
 type IncidentDetailPanelProps = {
   incident: CommandIncident;
+  onResolved?: () => void;
 };
 
-export function IncidentDetailPanel({ incident }: IncidentDetailPanelProps) {
+export function IncidentDetailPanel({ incident, onResolved }: IncidentDetailPanelProps) {
   const [tab, setTab] = useState<"detail" | "broadcast">("detail");
   const [status, setStatus] = useState<Severity>(incident.severity);
   const [statusOpen, setStatusOpen] = useState(true);
-  const [alerted, setAlerted] = useState<string[]>([]);
-  const [broadcast, setBroadcast] = useState("");
 
-  const hasAlerted = alerted.length > 0;
+  const { status: unitsStatus, items: units, error: unitsError } = useApiList(loadSecurityUnits);
+
+  const [dispatched, setDispatched] = useState<string[]>([]);
+  const [pendingUnit, setPendingUnit] = useState<string | null>(null);
+  const [actionError, setActionError] = useState("");
+  const [isResolving, setIsResolving] = useState(false);
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
+  const [broadcastNote, setBroadcastNote] = useState("");
+  const [broadcastResult, setBroadcastResult] = useState("");
+
+  const incidentId = Number(incident.id);
+  const hasDispatched = dispatched.length > 0;
+
+  const handleDispatch = async (unitName: string) => {
+    setActionError("");
+    setPendingUnit(unitName);
+
+    try {
+      await dispatchUnit(incidentId, unitName);
+      setDispatched((current) => [...new Set([...current, unitName])]);
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Could not alert that unit.");
+    } finally {
+      setPendingUnit(null);
+    }
+  };
+
+  const handleResolve = async () => {
+    setActionError("");
+    setIsResolving(true);
+
+    try {
+      await resolveIncident(incidentId, true);
+      onResolved?.();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Could not resolve this incident.");
+    } finally {
+      setIsResolving(false);
+    }
+  };
+
+  const handleBroadcast = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setActionError("");
+    setBroadcastResult("");
+    setIsBroadcasting(true);
+
+    try {
+      await broadcastIncident(incidentId, BROADCAST_RANGE_KM);
+      setBroadcastResult(`Broadcast sent to citizens within ${BROADCAST_RANGE_KM} km.`);
+      setBroadcastNote("");
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Could not send the broadcast.");
+    } finally {
+      setIsBroadcasting(false);
+    }
+  };
 
   return (
     <section className="detail-panel">
@@ -134,67 +195,97 @@ export function IncidentDetailPanel({ incident }: IncidentDetailPanelProps) {
               )}
             </div>
 
+            {actionError && (
+              <div className="auth-status auth-status--error detail-action-error" role="alert">
+                {actionError}
+              </div>
+            )}
+
             <button
               type="button"
-              className={hasAlerted ? "resolve-button is-ready" : "resolve-button"}
-              disabled={!hasAlerted}
-              title={hasAlerted ? undefined : "Alert a force before resolving"}
+              className={hasDispatched ? "resolve-button is-ready" : "resolve-button"}
+              disabled={!hasDispatched || isResolving}
+              onClick={handleResolve}
+              title={hasDispatched ? undefined : "Alert a unit before resolving"}
             >
               <ShieldCheck size={19} strokeWidth={2} />
-              Resolved
+              {isResolving ? "Resolving..." : "Resolved"}
             </button>
           </div>
 
           <div className="detail-body">
             <p className="forces-label">Nearest Forces</p>
 
-            {nearestForces.map((force) => (
-              <article className="force-card" key={force.id}>
-                <AgencyBadge agency={force.agency} />
-                <h3 className="force-card__station">{force.station}</h3>
-                <p className="force-card__address">
-                  {force.address} · {force.distance}
-                </p>
+            <ListState
+              status={unitsStatus}
+              error={unitsError}
+              isEmpty={units.length === 0}
+              emptyMessage="No units are registered yet."
+              skeletonRows={2}
+            >
+              {units.slice(0, 5).map((unit) => (
+                <article className="force-card" key={unit.id}>
+                  <AgencyBadge agency={unit.agency} />
+                  <h3 className="force-card__station">{unit.name}</h3>
+                  <p className="force-card__address">
+                    {unit.address}
+                    {unit.lga ? ` · ${unit.lga}` : ""}
+                  </p>
 
-                <div className="force-card__foot">
-                  <span className="force-card__contact">
-                    <UserRound size={15} strokeWidth={1.8} />
-                    {force.contact}
-                  </span>
-                  <button
-                    type="button"
-                    className="alert-force-button"
-                    onClick={() => setAlerted((current) => [...new Set([...current, force.id])])}
-                  >
-                    {alerted.includes(force.id) ? "Alerted" : "Alert"}
-                  </button>
-                </div>
-              </article>
-            ))}
+                  <div className="force-card__foot">
+                    <span className="force-card__contact">
+                      <UserRound size={15} strokeWidth={1.8} />
+                      {unit.teamLead}
+                    </span>
+                    <button
+                      type="button"
+                      className="alert-force-button"
+                      onClick={() => handleDispatch(unit.respondingUnit || unit.name)}
+                      disabled={pendingUnit !== null}
+                    >
+                      {dispatched.includes(unit.respondingUnit || unit.name)
+                        ? "Alerted"
+                        : pendingUnit === (unit.respondingUnit || unit.name)
+                          ? "Alerting..."
+                          : "Alert"}
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </ListState>
           </div>
         </>
       ) : (
         <div className="detail-body">
-          <form
-            className="broadcast-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              setBroadcast("");
-            }}
-          >
+          <form className="broadcast-form" onSubmit={handleBroadcast}>
             <div>
               <p className="detail-section-label" style={{ marginTop: 0 }}>
-                Message to citizens in this polygon
+                Alert citizens within {BROADCAST_RANGE_KM} km of this incident
               </p>
               <textarea
-                value={broadcast}
-                onChange={(event) => setBroadcast(event.target.value)}
+                value={broadcastNote}
+                onChange={(event) => setBroadcastNote(event.target.value)}
                 placeholder="Avoid the Warri-Sapele Road corridor. Security operatives are responding."
               />
+              <p className="broadcast-hint">
+                The API broadcasts by radius only — this note is not sent with it yet.
+              </p>
             </div>
 
-            <button type="submit" className="btn btn--primary" disabled={!broadcast.trim()}>
-              Send broadcast
+            {actionError && (
+              <div className="auth-status auth-status--error" role="alert">
+                {actionError}
+              </div>
+            )}
+
+            {broadcastResult && (
+              <div className="auth-status auth-status--success" role="status">
+                {broadcastResult}
+              </div>
+            )}
+
+            <button type="submit" className="btn btn--primary" disabled={isBroadcasting}>
+              {isBroadcasting ? "Sending..." : "Send broadcast"}
             </button>
           </form>
         </div>

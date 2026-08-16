@@ -1,97 +1,98 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 import { SquarePen } from "lucide-react";
+import { AvatarUploader } from "@/components/profile/AvatarUploader";
 import { TextField } from "@/components/ui/TextField";
-import { commandOperator } from "@/data/admin";
+import { useUser } from "@/components/auth/RouteGuard";
+import { useSession } from "@/components/auth/SessionProvider";
+import { updateProfile } from "@/services/auth.service";
 
 type Draft = {
   firstName: string;
   lastName: string;
   email: string;
   phoneNumber: string;
-  role: string;
-  serviceNumber: string;
-  rank: string;
-  unit: string;
-  yearsInService: string;
-  supervisor: string;
 };
-
-const initialDraft: Draft = {
-  firstName: commandOperator.firstName,
-  lastName: commandOperator.lastName,
-  email: commandOperator.contactEmail,
-  phoneNumber: commandOperator.phoneNumber,
-  role: commandOperator.role,
-  serviceNumber: commandOperator.serviceNumber,
-  rank: commandOperator.rank,
-  unit: commandOperator.unit,
-  yearsInService: commandOperator.yearsInService,
-  supervisor: commandOperator.supervisor,
-};
-
-/** `personal` and `service` panels edit independently, as in the design. */
-type EditTarget = "none" | "personal" | "service";
 
 export function OperatorProfile() {
-  const [editing, setEditing] = useState<EditTarget>("none");
-  const [saved, setSaved] = useState<Draft>(initialDraft);
-  const [draft, setDraft] = useState<Draft>(initialDraft);
+  const user = useUser();
+  const { role, refresh } = useSession();
 
-  const values = editing === "none" ? saved : draft;
+  const [isEditing, setIsEditing] = useState(false);
+  const [savedOverride, setSavedOverride] = useState<Draft | null>(null);
+  const [status, setStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const saved = savedOverride ?? {
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    phoneNumber: user.phoneNumber,
+  };
+
+  const [draft, setDraft] = useState<Draft>(saved);
+  const values = isEditing ? draft : saved;
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setDraft((current) => ({ ...current, [name]: value }));
   };
 
-  const startEditing = (target: Exclude<EditTarget, "none">) => {
+  const startEditing = () => {
     setDraft(saved);
-    setEditing(target);
+    setStatus(null);
+    setIsEditing(true);
   };
 
-  const save = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // Mock save — the command profile has no API endpoint yet.
-    setSaved(draft);
-    setEditing("none");
+    setStatus(null);
+    setIsSaving(true);
+
+    try {
+      await updateProfile({
+        name: `${draft.firstName} ${draft.lastName}`.trim(),
+        email: draft.email,
+        phone: draft.phoneNumber,
+      });
+
+      setSavedOverride(draft);
+      setIsEditing(false);
+      setStatus({ type: "success", message: "Profile updated." });
+      refresh();
+    } catch (error) {
+      setStatus({
+        type: "error",
+        message: error instanceof Error ? error.message : "Could not save your profile.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
     <>
       <section className="profile-identity">
-        <Image
-          className="profile-identity__avatar"
-          src={commandOperator.avatar}
-          alt=""
-          width={120}
-          height={120}
-          unoptimized
-        />
+        <AvatarUploader src={user.avatar} onUploaded={refresh} />
 
         <div>
           <p className="profile-identity__name">
             {saved.firstName} {saved.lastName}
           </p>
-          <p className="profile-identity__email">{commandOperator.email}</p>
+          <p className="profile-identity__email">{saved.email}</p>
         </div>
 
-        <button
-          type="button"
-          className="btn btn--ghost profile-identity__edit"
-          onClick={() => startEditing("personal")}
-        >
+        <button type="button" className="btn btn--ghost profile-identity__edit" onClick={startEditing}>
           <SquarePen size={15} strokeWidth={1.9} />
           Edit
         </button>
       </section>
 
-      <form className="profile-panel" onSubmit={save}>
+      <form className="profile-panel" onSubmit={handleSave}>
         <div className="profile-panel__head">
           <h2>Personal Information</h2>
-          <button type="button" className="btn btn--ghost" onClick={() => startEditing("personal")}>
+          <button type="button" className="btn btn--ghost" onClick={startEditing}>
             <SquarePen size={15} strokeWidth={1.9} />
             Edit
           </button>
@@ -103,14 +104,14 @@ export function OperatorProfile() {
             name="firstName"
             value={values.firstName}
             onChange={handleChange}
-            disabled={editing !== "personal"}
+            disabled={!isEditing}
           />
           <TextField
             label="Last name"
             name="lastName"
             value={values.lastName}
             onChange={handleChange}
-            disabled={editing !== "personal"}
+            disabled={!isEditing}
           />
           <TextField
             label="Email address"
@@ -118,7 +119,7 @@ export function OperatorProfile() {
             type="email"
             value={values.email}
             onChange={handleChange}
-            disabled={editing !== "personal"}
+            disabled={!isEditing}
           />
           <TextField
             label="Phone number"
@@ -126,87 +127,52 @@ export function OperatorProfile() {
             type="tel"
             value={values.phoneNumber}
             onChange={handleChange}
-            disabled={editing !== "personal"}
+            disabled={!isEditing}
           />
-          <TextField
-            label="Role"
-            name="role"
-            value={values.role}
-            onChange={handleChange}
-            disabled={editing !== "personal"}
-          />
+          {/* Role comes from the API and is not self-editable. */}
+          <TextField label="Role" name="role" value={role} disabled readOnly />
         </div>
 
-        {editing === "personal" && (
+        {status && (
+          <div className={`auth-status auth-status--${status.type} profile-status`} role="status">
+            {status.message}
+          </div>
+        )}
+
+        {isEditing && (
           <div className="profile-actions">
-            <button type="submit" className="btn btn--primary">
-              Save
+            <button type="submit" className="btn btn--primary" disabled={isSaving}>
+              {isSaving ? "Saving..." : "Save"}
             </button>
-            <button type="button" className="btn btn--outline" onClick={() => setEditing("none")}>
+            <button type="button" className="btn btn--outline" onClick={() => setIsEditing(false)}>
               Cancel
             </button>
           </div>
         )}
       </form>
 
-      <form className="profile-panel" onSubmit={save}>
+      <section className="profile-panel">
         <div className="profile-panel__head">
           <h2>Service &amp; Operational Information</h2>
-          <button type="button" className="btn btn--ghost" onClick={() => startEditing("service")}>
-            <SquarePen size={15} strokeWidth={1.9} />
-            Edit
-          </button>
         </div>
+
+        {/*
+          The design shows five service fields, but `UserResponse` carries none
+          of them. Rendered read-only rather than faked, so the gap is visible.
+        */}
+        <p className="profile-note">
+          Service records aren&apos;t stored by the API yet — these fields stay empty until the backend
+          adds them.
+        </p>
 
         <div className="profile-grid">
-          <TextField
-            label="Service Number"
-            name="serviceNumber"
-            value={values.serviceNumber}
-            onChange={handleChange}
-            disabled={editing !== "service"}
-          />
-          <TextField
-            label="Rank"
-            name="rank"
-            value={values.rank}
-            onChange={handleChange}
-            disabled={editing !== "service"}
-          />
-          <TextField
-            label="Unit / Police Post"
-            name="unit"
-            value={values.unit}
-            onChange={handleChange}
-            disabled={editing !== "service"}
-          />
-          <TextField
-            label="Years in Service"
-            name="yearsInService"
-            value={values.yearsInService}
-            onChange={handleChange}
-            disabled={editing !== "service"}
-          />
-          <TextField
-            label="Direct Supervisor"
-            name="supervisor"
-            value={values.supervisor}
-            onChange={handleChange}
-            disabled={editing !== "service"}
-          />
+          <TextField label="Service Number" name="serviceNumber" value="" disabled readOnly />
+          <TextField label="Rank" name="rank" value="" disabled readOnly />
+          <TextField label="Unit / Police Post" name="unit" value="" disabled readOnly />
+          <TextField label="Years in Service" name="yearsInService" value="" disabled readOnly />
+          <TextField label="Direct Supervisor" name="supervisor" value="" disabled readOnly />
         </div>
-
-        {editing === "service" && (
-          <div className="profile-actions">
-            <button type="submit" className="btn btn--primary">
-              Save
-            </button>
-            <button type="button" className="btn btn--outline" onClick={() => setEditing("none")}>
-              Cancel
-            </button>
-          </div>
-        )}
-      </form>
+      </section>
     </>
   );
 }

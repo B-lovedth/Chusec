@@ -5,10 +5,10 @@ import { MapCard } from "@/components/dashboard/MapCard";
 import { ActiveCorridorAlert } from "@/components/dashboard/ActiveCorridorAlert";
 import { NearbyIncidents } from "@/components/dashboard/NearbyIncidents";
 import { TransitCorridors } from "@/components/dashboard/TransitCorridors";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useUser } from "@/components/auth/RouteGuard";
 
 export default function DashboardPage() {
-  const { user } = useCurrentUser();
+  const user = useUser();
 
   return (
     <PageShell

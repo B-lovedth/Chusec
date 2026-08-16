@@ -18,6 +18,41 @@ export async function submitReport(payload: ReportCreate): Promise<ReportRespons
   });
 }
 
+export async function listIncidentHistory(limit?: number): Promise<IncidentResponse[]> {
+  return apiRequest<IncidentResponse[]>("/api/incidents/history", {
+    params: limit ? { limit } : undefined,
+  });
+}
+
+/* ------------------------------------------------------------------ *
+ * Command centre actions — all take query params, no request body.
+ * ------------------------------------------------------------------ */
+
+export async function dispatchUnit(incidentId: number, unitName: string): Promise<unknown> {
+  return apiRequest<unknown>(`/api/incidents/${incidentId}/dispatch`, {
+    method: "POST",
+    params: { unit_name: unitName },
+  });
+}
+
+export async function broadcastIncident(incidentId: number, rangeKm: number): Promise<unknown> {
+  return apiRequest<unknown>(`/api/incidents/${incidentId}/broadcast`, {
+    method: "POST",
+    params: { range_km: rangeKm },
+  });
+}
+
+export async function resolveIncident(incidentId: number, successful = true): Promise<unknown> {
+  return apiRequest<unknown>(`/api/incidents/${incidentId}/resolve`, {
+    method: "POST",
+    params: { successful },
+  });
+}
+
+export async function requestBackup(incidentId: number): Promise<unknown> {
+  return apiRequest<unknown>(`/api/incidents/${incidentId}/backup`, { method: "POST" });
+}
+
 /** Evidence upload requires a token, so anonymous reports cannot carry files. */
 export async function uploadEvidence(file: File, incidentId?: string): Promise<unknown> {
   const form = new FormData();

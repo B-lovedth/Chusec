@@ -1,24 +1,29 @@
 "use client";
 
-import { nearbyIncidents } from "@/data/dashboard";
 import { loadNearbyIncidents } from "@/data/loaders";
 import { useApiList } from "@/hooks/useApiList";
 import { IncidentItem } from "@/components/dashboard/IncidentItem";
-import { ListSkeleton } from "@/components/ui/ListSkeleton";
+import { ListState } from "@/components/ui/ListState";
 
 export function NearbyIncidents() {
-  const { status, items } = useApiList(loadNearbyIncidents, nearbyIncidents);
+  const { status, items, error } = useApiList(loadNearbyIncidents);
 
   return (
     <section className="panel panel--first">
       <h2 className="panel__title">Nearby Incidents</h2>
 
       <div className="list-card">
-        {status === "loading" ? (
-          <ListSkeleton rows={3} />
-        ) : (
-          items.map((incident) => <IncidentItem key={incident.id} incident={incident} />)
-        )}
+        <ListState
+          status={status}
+          error={error}
+          isEmpty={items.length === 0}
+          emptyMessage="No incidents reported near you."
+          skeletonRows={3}
+        >
+          {items.map((incident) => (
+            <IncidentItem key={incident.id} incident={incident} />
+          ))}
+        </ListState>
       </div>
     </section>
   );

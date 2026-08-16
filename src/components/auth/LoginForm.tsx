@@ -1,19 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { AtSign, Lock, ScanFace } from "lucide-react";
 import { AuthBrand } from "@/components/auth/AuthBrand";
 import { BackButton } from "@/components/auth/BackButton";
 import { TextField } from "@/components/ui/TextField";
-import { loginUser } from "@/services/auth.service";
+import { useSession } from "@/components/auth/SessionProvider";
+import { getCurrentUser, loginUser } from "@/services/auth.service";
 import { isValidEmail, isValidNigerianPhone } from "@/lib/validation";
+import { areaForPath, areaForRole, areaHome } from "@/lib/roles";
 
 type Errors = Partial<Record<"identifier" | "password", string>>;
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { signIn } = useSession();
   const [form, setForm] = useState({ identifier: "", password: "" });
   const [errors, setErrors] = useState<Errors>({});
   const [formError, setFormError] = useState("");
@@ -46,7 +50,19 @@ export function LoginForm() {
     setIsSubmitting(true);
     try {
       await loginUser(form);
-      router.push("/dashboard");
+
+      // The role decides which dashboard the user lands on.
+      const profile = await getCurrentUser();
+      const area = areaForRole(profile.role);
+
+      // Honour ?next= only when it belongs to the user's own area.
+      const next = searchParams.get("next");
+      const target = next && areaForPath(next) === area ? next : areaHome[area];
+
+      // Must run before navigating, or the guard sees a stale signed-out
+      // session and sends the user back here.
+      signIn(profile);
+      router.replace(target);
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "Could not sign you in. Try again.");
       setIsSubmitting(false);

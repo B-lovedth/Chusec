@@ -1,5 +1,6 @@
-import { currentUser, type IncidentItem, type Severity, type TransitCorridor, type UserProfile } from "@/data/dashboard";
+import { profileDefaults, type IncidentItem, type Severity, type TransitCorridor, type UserProfile } from "@/data/dashboard";
 import type { IncidentResponse, RouteResponse, UserResponse } from "@/services/types";
+import { API_BASE_URL } from "@/services/api";
 
 const SEVERITIES: Severity[] = ["Critical", "High", "Medium", "Low"];
 
@@ -45,6 +46,16 @@ export function splitName(name: string): { firstName: string; lastName: string }
   };
 }
 
+/**
+ * Uploaded avatars may come back as a path relative to the API host. Left as
+ * given, the browser would resolve it against the frontend origin and 404.
+ */
+export function toAvatarUrl(avatarUrl: string | null): string {
+  if (!avatarUrl) return profileDefaults.avatar;
+  if (/^(https?:|data:|blob:)/.test(avatarUrl)) return avatarUrl;
+  return `${API_BASE_URL}${avatarUrl.startsWith("/") ? "" : "/"}${avatarUrl}`;
+}
+
 export function toUserProfile(user: UserResponse): UserProfile {
   const { firstName, lastName } = splitName(user.name);
 
@@ -56,7 +67,7 @@ export function toUserProfile(user: UserResponse): UserProfile {
     emergencyContact: user.emergency_contact ?? "",
     nin: user.nin ?? "",
     // The API has no home location field — keep the fixture value for the chip.
-    location: currentUser.location,
-    avatar: user.avatar_url || currentUser.avatar,
+    location: profileDefaults.location,
+    avatar: toAvatarUrl(user.avatar_url),
   };
 }

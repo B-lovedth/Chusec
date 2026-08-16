@@ -1,33 +1,108 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { StatCards } from "@/components/admin/StatCards";
 import { IncidentQueue } from "@/components/admin/IncidentQueue";
 import { CommandMap } from "@/components/admin/CommandMap";
 import { IncidentDetailPanel } from "@/components/admin/IncidentDetailPanel";
-import { IncidentsPerHourChart, WeeklyResolutionChart } from "@/components/admin/Charts";
-import { commandIncidents } from "@/data/admin";
+import { IncidentsPerHourChart, WeeklyResolutionChart, type WeeklySeries } from "@/components/admin/Charts";
+import { ListState } from "@/components/ui/ListState";
+import { useApiList } from "@/hooks/useApiList";
+import { loadCommandIncidents } from "@/data/loaders";
+import { getAnalytics, getDashboardStats } from "@/services/dashboard.service";
+import { toCommandStats, toHourlySeries } from "@/lib/admin-mappers";
+import { listIncidents } from "@/services/incidents.service";
+import type { CommandStat } from "@/data/admin";
 
 export default function CommandDashboardPage() {
-  const [selectedId, setSelectedId] = useState(commandIncidents[0].id);
-  const selected = commandIncidents.find((incident) => incident.id === selectedId) ?? commandIncidents[0];
+  const { status, items: incidents, error } = useApiList(loadCommandIncidents);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const [stats, setStats] = useState<CommandStat[]>([]);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [hourly, setHourly] = useState<number[]>([]);
+  const [weekly, setWeekly] = useState<WeeklySeries[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getDashboardStats()
+      .then((value) => {
+        if (cancelled) return;
+        setStats(toCommandStats(value));
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setStatsLoading(false);
+      });
+
+    getAnalytics()
+      .then((value) => {
+        if (cancelled) return;
+        setWeekly(
+          value.labels.map((day, index) => ({
+            day,
+            incidents: value.incidents[index] ?? 0,
+            dispatched: value.dispatched[index] ?? 0,
+          })),
+        );
+      })
+      .catch(() => undefined);
+
+    // Hourly buckets are derived from the raw feed — the API has no hourly series.
+    listIncidents()
+      .then((value) => {
+        if (!cancelled) setHourly(toHourlySeries(value));
+      })
+      .catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const select = useCallback((id: string) => setSelectedId(id), []);
+
+  const selected = incidents.find((incident) => incident.id === selectedId) ?? incidents[0] ?? null;
 
   return (
     <main className="page-card">
-      <StatCards />
+      <StatCards stats={stats} isLoading={statsLoading} />
 
       <h1 className="command-title">Command Centre · Delta State</h1>
 
       <div className="command-grid">
-        <IncidentQueue incidents={commandIncidents} selectedId={selectedId} onSelect={setSelectedId} />
+        <IncidentQueue
+          incidents={incidents}
+          selectedId={selected?.id ?? ""}
+          onSelect={select}
+          status={status}
+          error={error}
+        />
 
         <div>
-          <CommandMap incidents={commandIncidents} selectedId={selectedId} onSelect={setSelectedId} />
-          <IncidentsPerHourChart />
-          <WeeklyResolutionChart />
+          <CommandMap incidents={incidents} selectedId={selected?.id ?? ""} onSelect={select} />
+          <IncidentsPerHourChart series={hourly} />
+          <WeeklyResolutionChart data={weekly} />
         </div>
 
-        <IncidentDetailPanel incident={selected} key={selected.id} />
+        {selected ? (
+          <IncidentDetailPanel incident={selected} key={selected.id} />
+        ) : (
+          <section className="detail-panel">
+            <div className="detail-body">
+              <ListState
+                status={status}
+                error={error}
+                isEmpty={incidents.length === 0}
+                emptyMessage="No active incidents."
+                skeletonRows={2}
+              >
+                {null}
+              </ListState>
+            </div>
+          </section>
+        )}
       </div>
     </main>
   );

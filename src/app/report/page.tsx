@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { PageShell } from "@/components/layout/PageShell";
 import { ReportForm } from "@/components/report/ReportForm";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useUser } from "@/components/auth/RouteGuard";
 
 export default function ReportPage() {
-  const { user } = useCurrentUser();
+  const user = useUser();
   const [isAnonymous, setIsAnonymous] = useState(false);
 
   return (
