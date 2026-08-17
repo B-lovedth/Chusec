@@ -1,15 +1,6 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { PageShell } from "@/components/layout/PageShell";
-import { ProfileForm } from "@/components/profile/ProfileForm";
-import { useUser } from "@/components/auth/RouteGuard";
-
+/** Profile moved under Settings; keep the old path working. */
 export default function ProfilePage() {
-  const user = useUser();
-
-  return (
-    <PageShell title="My Profile" location={user.location}>
-      <ProfileForm />
-    </PageShell>
-  );
+  redirect("/settings");
 }

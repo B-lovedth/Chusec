@@ -132,7 +132,19 @@ export function SosLauncher() {
           }}
         >
           <div className="sos-modal">
-            <div className="sos-modal__handle" aria-hidden="true" />
+            <div className="sos-modal__grip">
+              <span className="sos-modal__handle" aria-hidden="true" />
+              {/* Phones hide the header bar, so the sheet needs its own way out
+                  that does not cancel the SOS. */}
+              <button
+                type="button"
+                className="sos-modal__sheet-close"
+                onClick={() => setIsOpen(false)}
+                aria-label="Close without cancelling SOS"
+              >
+                <X size={18} strokeWidth={2} />
+              </button>
+            </div>
 
             <div className="sos-modal__head">
               <h2 id="sos-modal-heading">SOS</h2>

@@ -3,7 +3,10 @@
 import { useMemo, useState } from "react";
 import { Plus, Search, SquarePen, Trash2 } from "lucide-react";
 import { Pagination } from "@/components/admin/Pagination";
-import { members, type MemberStatus } from "@/data/admin";
+import { useApiList } from "@/hooks/useApiList";
+import { loadMembers } from "@/data/loaders";
+import { deleteMember } from "@/services/dashboard.service";
+import type { MemberStatus } from "@/data/admin";
 
 const TOTAL_PAGES = 16;
 
@@ -19,13 +22,29 @@ function initials(name: string) {
 export default function UserAccessPage() {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<MemberStatus | "All">("All");
-  const [page, setPage] = useState(4);
+  const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<string[]>([]);
+  const [removed, setRemoved] = useState<string[]>([]);
+  const [actionError, setActionError] = useState("");
+
+  const { status: loadStatus, items: members, error: loadError } = useApiList(loadMembers);
+
+  const handleDelete = async (id: string) => {
+    setActionError("");
+
+    try {
+      await deleteMember(Number(id));
+      setRemoved((current) => [...current, id]);
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Could not remove that member.");
+    }
+  };
 
   const visible = useMemo(() => {
     const term = query.trim().toLowerCase();
 
     return members.filter((member) => {
+      if (removed.includes(member.id)) return false;
       const matchesQuery =
         !term ||
         member.name.toLowerCase().includes(term) ||
@@ -33,7 +52,7 @@ export default function UserAccessPage() {
       const matchesStatus = status === "All" || member.status === status;
       return matchesQuery && matchesStatus;
     });
-  }, [query, status]);
+  }, [query, status, members, removed]);
 
   const allChecked = visible.length > 0 && visible.every((member) => selected.includes(member.id));
 
@@ -89,6 +108,12 @@ export default function UserAccessPage() {
             </button>
           </div>
 
+          {actionError && (
+            <div className="auth-status auth-status--error" role="alert" style={{ margin: "0 18px 12px" }}>
+              {actionError}
+            </div>
+          )}
+
           <div className="data-table-wrap">
             <table className="data-table">
               <thead>
@@ -141,7 +166,11 @@ export default function UserAccessPage() {
                           <SquarePen size={14} strokeWidth={1.9} />
                           Edit
                         </button>
-                        <button type="button" className="row-action row-action--danger">
+                        <button
+                          type="button"
+                          className="row-action row-action--danger"
+                          onClick={() => handleDelete(member.id)}
+                        >
                           <Trash2 size={14} strokeWidth={1.9} />
                           Delete
                         </button>
@@ -153,7 +182,11 @@ export default function UserAccessPage() {
                 {visible.length === 0 && (
                   <tr>
                     <td colSpan={6} style={{ padding: 32, textAlign: "center", color: "#9aa0a6" }}>
-                      No members match that search.
+                      {loadStatus === "loading"
+                        ? "Loading members..."
+                        : loadStatus === "error"
+                          ? loadError
+                          : "No members match that search."}
                     </td>
                   </tr>
                 )}

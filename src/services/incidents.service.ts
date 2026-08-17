@@ -1,5 +1,11 @@
 import { apiRequest } from "./api";
-import type { IncidentResponse, ReportCreate, ReportResponse } from "./types";
+import type {
+  BackupRequestResponse,
+  IncidentClearanceReport,
+  IncidentResponse,
+  ReportCreate,
+  ReportResponse,
+} from "./types";
 
 export async function listIncidents(): Promise<IncidentResponse[]> {
   return apiRequest<IncidentResponse[]>("/api/incidents");
@@ -49,8 +55,60 @@ export async function resolveIncident(incidentId: number, successful = true): Pr
   });
 }
 
-export async function requestBackup(incidentId: number): Promise<unknown> {
-  return apiRequest<unknown>(`/api/incidents/${incidentId}/backup`, { method: "POST" });
+export async function updateIncidentSeverity(incidentId: number, severity: string): Promise<unknown> {
+  return apiRequest<unknown>(`/api/incidents/${incidentId}/severity`, {
+    method: "PATCH",
+    body: { severity },
+  });
+}
+
+/* ------------------------------------------------------------------ *
+ * Responding-unit actions
+ * ------------------------------------------------------------------ */
+
+/** Incidents assigned to the signed-in unit. */
+export async function listAssignedIncidents(): Promise<IncidentResponse[]> {
+  return apiRequest<IncidentResponse[]>("/api/incidents/assigned/me");
+}
+
+export async function updateUnitStatus(incidentId: number, status: string): Promise<unknown> {
+  return apiRequest<unknown>(`/api/incidents/${incidentId}/unit-status`, {
+    method: "PATCH",
+    body: { status },
+  });
+}
+
+export async function requestBackup(incidentId: number, notes?: string): Promise<BackupRequestResponse> {
+  return apiRequest<BackupRequestResponse>(`/api/incidents/${incidentId}/request-backup`, {
+    method: "POST",
+    body: { notes: notes ?? null },
+  });
+}
+
+export async function listBackupHistory(incidentId: number): Promise<BackupRequestResponse[]> {
+  return apiRequest<BackupRequestResponse[]>(`/api/incidents/${incidentId}/backup-history`);
+}
+
+export async function dispatchBackup(
+  incidentId: number,
+  requestId: number,
+  payload: { backup_unit_id?: number | null; backup_unit_callsign?: string | null },
+): Promise<unknown> {
+  return apiRequest<unknown>(`/api/incidents/${incidentId}/backup-requests/${requestId}/dispatch`, {
+    method: "POST",
+    body: payload,
+  });
+}
+
+/** Closes the incident with the responding unit's clearance report. */
+export async function clearIncident(
+  incidentId: number,
+  report: IncidentClearanceReport,
+): Promise<unknown> {
+  return apiRequest<unknown>(`/api/incidents/${incidentId}/clear-incident`, {
+    method: "POST",
+    body: report,
+  });
 }
 
 /** Evidence upload requires a token, so anonymous reports cannot carry files. */

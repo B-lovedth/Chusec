@@ -1,7 +1,9 @@
 "use client";
 
+import { useMemo } from "react";
 import { Minus, Plus } from "lucide-react";
 import { MapCanvas } from "@/components/dashboard/MapCanvas";
+import { MapboxMap, MAPBOX_TOKEN, type MapMarker } from "@/components/map/MapboxMap";
 import { SeverityBadge } from "@/components/ui/SeverityBadge";
 import type { CommandIncident } from "@/data/admin";
 
@@ -21,46 +23,69 @@ type CommandMapProps = {
 };
 
 export function CommandMap({ incidents, selectedId, onSelect }: CommandMapProps) {
-  // The callout tracks the selected incident rather than being pinned.
   const callout = incidents.find((incident) => incident.id === selectedId) ?? incidents[0] ?? null;
+
+  const markers = useMemo<MapMarker[]>(
+    () =>
+      incidents
+        .filter((incident) => incident.coordinates !== null)
+        .map((incident) => ({
+          id: incident.id,
+          lat: incident.coordinates!.lat,
+          lon: incident.coordinates!.lon,
+          color: markerColor[incident.severity] ?? "#ef4136",
+          selected: incident.id === selectedId,
+          label: `${incident.title} — ${incident.location}`,
+          tooltip: {
+            badge: incident.severity,
+            badgeColor: markerColor[incident.severity],
+            title: incident.title,
+            lines: [incident.location, `${incident.reference} · ${incident.time}`],
+          },
+        })),
+    [incidents, selectedId],
+  );
+
+  const useMapbox = Boolean(MAPBOX_TOKEN);
 
   return (
     <div className="command-map">
-      <MapCanvas showOverlays={false} />
+      {useMapbox ? (
+        <MapboxMap markers={markers} onSelect={onSelect} />
+      ) : (
+        <>
+          <MapCanvas showOverlays={false} />
 
-      <div className="map-zoom">
-        <button type="button" aria-label="Zoom in">
-          <Plus size={16} strokeWidth={2.2} />
-        </button>
-        <button type="button" aria-label="Zoom out">
-          <Minus size={16} strokeWidth={2.2} />
-        </button>
-      </div>
+          <div className="map-zoom">
+            <button type="button" aria-label="Zoom in">
+              <Plus size={16} strokeWidth={2.2} />
+            </button>
+            <button type="button" aria-label="Zoom out">
+              <Minus size={16} strokeWidth={2.2} />
+            </button>
+          </div>
 
-      {incidents.map((incident) => (
-        <button
-          type="button"
-          key={incident.id}
-          className={incident.id === selectedId ? "map-marker is-selected" : "map-marker"}
-          style={{
-            left: `${incident.point.x}%`,
-            top: `${incident.point.y}%`,
-            "--marker": markerColor[incident.severity] ?? "#ef4136",
-          } as React.CSSProperties}
-          onClick={() => onSelect(incident.id)}
-          aria-label={`${incident.title} — ${incident.location}`}
-        />
-      ))}
+          {incidents.map((incident) => (
+            <button
+              type="button"
+              key={incident.id}
+              className={incident.id === selectedId ? "map-marker is-selected" : "map-marker"}
+              style={
+                {
+                  left: `${incident.point.x}%`,
+                  top: `${incident.point.y}%`,
+                  "--marker": markerColor[incident.severity] ?? "#ef4136",
+                } as React.CSSProperties
+              }
+              onClick={() => onSelect(incident.id)}
+              aria-label={`${incident.title} — ${incident.location}`}
+            />
+          ))}
+        </>
+      )}
 
       {callout && (
-        <div
-          className="map-popup"
-          style={{
-            // Sits above the marker, nudged inside the edges of the map.
-            left: `${Math.min(Math.max(callout.point.x - 6, 2), 52)}%`,
-            top: `${Math.max(callout.point.y - 42, 4)}%`,
-          }}
-        >
+        <div className="map-popup map-popup--pinned">
           <p className="map-popup__meta">
             {callout.reference} · {callout.time}
           </p>
@@ -70,7 +95,6 @@ export function CommandMap({ incidents, selectedId, onSelect }: CommandMapProps)
           <div className="map-popup__badge">
             <SeverityBadge severity={callout.severity} />
           </div>
-          <span className="map-popup__tail" aria-hidden="true" />
         </div>
       )}
 

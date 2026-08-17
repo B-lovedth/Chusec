@@ -173,17 +173,39 @@ transform: none;
   }
 }
 
-/* Grab handle, phones only — the sheet has no header bar. */
-.sos-modal__handle {
+/* Grab handle + close button, phones only — the sheet has no header bar. */
+.sos-modal__grip {
   display: none;
-  width: 124px;
-  height: 5px;
-  margin: 10px auto 0;
-  border-radius: $r-pill;
-  background: #1a1a1a;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
 
   @include respond-to(mobile) {
-    display: block;
+    display: flex;
+  }
+}
+
+.sos-modal__handle {
+  width: 124px;
+  height: 5px;
+  border-radius: $r-pill;
+  background: #1a1a1a;
+}
+
+.sos-modal__sheet-close {
+  position: absolute;
+  top: 6px;
+  right: 12px;
+  @include flex-center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: $panel;
+  color: $text;
+
+  &:hover {
+    background: #e9eaec;
   }
 }
 

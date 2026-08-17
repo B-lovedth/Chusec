@@ -10,6 +10,8 @@ type IncidentQueueProps = {
   onSelect: (id: string) => void;
   status: "loading" | "ready" | "error";
   error: string;
+  /** "Incidents" for command, "Assigned Cases" for a responding unit. */
+  title?: string;
 };
 
 function QueueTag({ incident }: { incident: CommandIncident }) {
@@ -18,11 +20,18 @@ function QueueTag({ incident }: { incident: CommandIncident }) {
   return <SeverityBadge severity={incident.tag.value} />;
 }
 
-export function IncidentQueue({ incidents, selectedId, onSelect, status, error }: IncidentQueueProps) {
+export function IncidentQueue({
+  incidents,
+  selectedId,
+  onSelect,
+  status,
+  error,
+  title = "Incidents",
+}: IncidentQueueProps) {
   return (
     <section className="queue">
       <div className="queue__head">
-        <h2>Incidents</h2>
+        <h2>{title}</h2>
         {status === "ready" && incidents.length > 0 && <span className="badge-new">New</span>}
       </div>
 

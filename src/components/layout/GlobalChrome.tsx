@@ -7,6 +7,8 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { SosLauncher } from "@/components/sos/SosLauncher";
 import { SessionProvider } from "@/components/auth/SessionProvider";
 import { RouteGuard } from "@/components/auth/RouteGuard";
+import { DesktopOnly } from "@/components/layout/DesktopOnly";
+import { CitizenDataProvider } from "@/components/citizen/CitizenDataProvider";
 
 const commandNavItems: NavItem[] = [
   { label: "Dashboard", href: "/admin/dashboard" },
@@ -16,6 +18,13 @@ const commandNavItems: NavItem[] = [
   { label: "Profile", href: "/admin/profile" },
 ];
 
+/** Responding units get a shorter nav — no Unit or User access. */
+const unitNavItems: NavItem[] = [
+  { label: "Dashboard", href: "/unit/dashboard" },
+  { label: "History", href: "/unit/history" },
+  { label: "Profile", href: "/unit/profile" },
+];
+
 type GlobalChromeProps = {
   children: ReactNode;
 };
@@ -23,11 +32,21 @@ type GlobalChromeProps = {
 function AppChrome({ children }: GlobalChromeProps) {
   const pathname = usePathname();
 
-  // The command centre is desktop-first: no bottom tab bar, no SOS launcher.
+  // Command centre and unit portals are desktop-first: no bottom tab bar and
+  // no SOS launcher — those belong to the citizen app.
   if (pathname.startsWith("/admin")) {
     return (
-      <>
+      <DesktopOnly>
         <Navbar items={commandNavItems} profileHref="/admin/profile" alwaysVisible />
+        <RouteGuard>{children}</RouteGuard>
+      </DesktopOnly>
+    );
+  }
+
+  if (pathname.startsWith("/unit")) {
+    return (
+      <>
+        <Navbar items={unitNavItems} profileHref="/unit/profile" alwaysVisible />
         <RouteGuard>{children}</RouteGuard>
       </>
     );
@@ -36,7 +55,9 @@ function AppChrome({ children }: GlobalChromeProps) {
   return (
     <>
       <Navbar />
-      <RouteGuard>{children}</RouteGuard>
+      <RouteGuard>
+        <CitizenDataProvider>{children}</CitizenDataProvider>
+      </RouteGuard>
       <SosLauncher />
       <BottomNav />
     </>

@@ -28,11 +28,6 @@ export type TransitCorridor = {
   severity: Severity;
 };
 
-export type ActiveCorridor = {
-  status: string;
-  message: string;
-};
-
 /**
  * Not mock user data — these are the defaults for the two profile fields the
  * API does not carry (`location` and `avatar`). Everything else on the profile
@@ -45,12 +40,8 @@ export const profileDefaults: UserProfile = {
   phoneNumber: "+2348181804434",
   emergencyContact: "+2348181804434",
   nin: "12345678901",
-  location: "Warri",
+  location: "",
   avatar: "/avatar-placeholder.svg",
 };
 
-export const activeCorridor: ActiveCorridor = {
-  status: "ACTIVE",
-  message: "Warri-Sapele Rd & Benin-Auchi corridor. Avoid travel.",
-};
 

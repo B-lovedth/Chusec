@@ -2,6 +2,7 @@ import { apiRequest } from "./api";
 import { setAccessToken } from "@/lib/session";
 import { isValidEmail } from "@/lib/validation";
 import type {
+  LocationUpdateRequest,
   ProfileUpdateRequest,
   RegisterRequest,
   TokenResponse,
@@ -109,6 +110,22 @@ export async function updateProfile(payload: ProfileUpdateRequest): Promise<User
     method: "PUT",
     body: payload,
   });
+}
+
+/**
+ * Stores the citizen's live coordinates. The consolidated dashboard reads
+ * these, so this has to land before `GET /api/dashboard/citizen`.
+ */
+export async function updateLocation(payload: LocationUpdateRequest): Promise<unknown> {
+  return apiRequest<unknown>("/api/auth/location", { method: "POST", body: payload });
+}
+
+/**
+ * Irreversible. Deletes the signed-in user's own account; the caller is
+ * responsible for clearing the session afterwards.
+ */
+export async function deleteAccount(): Promise<unknown> {
+  return apiRequest<unknown>("/api/auth/me", { method: "DELETE" });
 }
 
 export async function uploadAvatar(file: File): Promise<UserResponse> {

@@ -5,3 +5,4 @@ export * from "./incidents.service";
 export * from "./routes.service";
 export * from "./sos.service";
 export * from "./dashboard.service";
+export * from "./beacons.service";

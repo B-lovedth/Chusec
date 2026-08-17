@@ -3,14 +3,14 @@
 import { Fragment } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, ClipboardList, CircleUser, Map } from "lucide-react";
+import { Bell, ClipboardList, Map, Settings } from "lucide-react";
 
 /** The dashboard is labelled "Map" in the mobile tab bar. */
 const tabs = [
   { label: "Map", href: "/dashboard", Icon: Map },
   { label: "Alerts", href: "/alerts", Icon: Bell },
   { label: "Report", href: "/report", Icon: ClipboardList },
-  { label: "Profile", href: "/profile", Icon: CircleUser },
+  { label: "Settings", href: "/settings", Icon: Settings },
 ];
 
 export function BottomNav() {

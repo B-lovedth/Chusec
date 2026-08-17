@@ -92,6 +92,131 @@ export type SOSResponse = SOSCreate & {
   created_at: string;
 };
 
+/* ------------------------------------------------------------------ *
+ * Consolidated citizen dashboard
+ * ------------------------------------------------------------------ */
+
+export type LocationUpdateRequest = {
+  lat: number;
+  lon: number;
+  heading?: number | null;
+  speed?: number | null;
+};
+
+export type ActiveSOSResponse = {
+  id: number;
+  created_at: string;
+  is_cancelled: boolean;
+  duress_recording_status: string | null;
+};
+
+export type NearbyIncidentResponse = {
+  id: number;
+  type: string;
+  location_name: string;
+  severity: string;
+  distance_km: number;
+  /** Pre-formatted by the API, e.g. "1.2 km". */
+  distance_formatted: string;
+  cardinal_direction: string;
+  time_formatted: string;
+  unit_status: string;
+  created_at: string;
+  lat: number;
+  lon: number;
+};
+
+export type SeverityBreakdown = {
+  critical: number;
+  high: number;
+  medium: number;
+  low: number;
+  total_active: number;
+};
+
+/** A waypoint may arrive as a pair or as a named object — see `toCorridorLine`. */
+export type CorridorWaypoint =
+  | [number, number]
+  | { lat?: number; lon?: number; lng?: number; latitude?: number; longitude?: number };
+
+export type TransitCorridorResponse = {
+  id: number;
+  name: string;
+  risk_level: string;
+  /** Lowercase twin of `risk_level`; preferred when present. */
+  severity?: string | null;
+  risk_pct: number;
+  incident_count: number;
+  distance_km: string;
+  color: string;
+  start_lat?: number | null;
+  start_lon?: number | null;
+  end_lat?: number | null;
+  end_lon?: number | null;
+  waypoints?: CorridorWaypoint[] | null;
+};
+
+export type CitizenDashboardResponse = {
+  is_beacon_active: boolean;
+  user_id: number;
+  user_name: string;
+  avatar_url: string | null;
+  city: string | null;
+  lat: number | null;
+  lon: number | null;
+  unread_notifications_count: number;
+  active_sos: ActiveSOSResponse | null;
+  /** Set when the dashboard has nothing to scope to yet. */
+  message: string | null;
+  nearby_incidents: NearbyIncidentResponse[];
+  severity_breakdown: SeverityBreakdown;
+  active_corridor_warning: string | null;
+  transit_corridors: TransitCorridorResponse[];
+};
+
+export type MemberResponse = {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  is_active: boolean;
+  is_verified: boolean;
+  created_at: string | null;
+};
+
+export type CreateMemberRequest = {
+  email: string;
+  name?: string | null;
+  /** Defaults to "operator" server-side. */
+  role?: string;
+  password?: string | null;
+};
+
+export type BackupRequestResponse = {
+  id: number;
+  incident_id: number;
+  requesting_unit_id: number;
+  requesting_unit_callsign: string;
+  requested_at: string;
+  notes: string | null;
+  backup_unit_id: number | null;
+  backup_unit_callsign: string | null;
+  dispatched_at: string | null;
+  status: string;
+};
+
+export type IncidentClearanceReport = {
+  victims_injured?: number;
+  victims_dead?: number;
+  criminals_injured?: number;
+  criminals_dead?: number;
+  criminals_arrested?: number;
+  agents_injured?: number;
+  agents_dead?: number;
+  clearance_notes?: string | null;
+  successful?: boolean;
+};
+
 export type DashboardStats = {
   active_incidents: number;
   critical_alerts: number;

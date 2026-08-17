@@ -1,14 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Camera, MapPin, Mic } from "lucide-react";
-import { incidentTypes, severityLevels, type IncidentType } from "@/data/report";
+import { useEffect, useRef, useState } from "react";
+import { Camera, FileVideo, MapPin, Mic, X } from "lucide-react";
+import { incidentTypes, type IncidentType } from "@/data/report";
 import { SubmitChoiceModal } from "@/components/report/SubmitChoiceModal";
 import { submitReport, uploadEvidence } from "@/services/incidents.service";
 import { getCurrentCoordinates, toApiPoint } from "@/lib/geolocation";
 import { isAuthenticated } from "@/lib/session";
-import { useUser } from "@/components/auth/RouteGuard";
-import type { Severity } from "@/data/dashboard";
+import { useCitizenData } from "@/components/citizen/CitizenDataProvider";
 
 type Status = { type: "success" | "error"; message: string } | null;
 
@@ -18,16 +17,32 @@ type ReportFormProps = {
 };
 
 export function ReportForm({ isAnonymous, onAnonymousChange }: ReportFormProps) {
-  const user = useUser();
+  const { city } = useCitizenData();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [incidentType, setIncidentType] = useState<IncidentType>(incidentTypes[0]);
-  const [severity, setSeverity] = useState<Severity>("High");
-  const [location, setLocation] = useState(user.location);
+  const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
   const [evidence, setEvidence] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const previewUrlRef = useRef("");
   const [status, setStatus] = useState<Status>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isChoosing, setIsChoosing] = useState(false);
+
+  // Release the last object URL when the form goes away.
+  useEffect(() => () => {
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+  }, []);
+
+  /** Swaps the selection and its preview, freeing the previous object URL. */
+  const selectEvidence = (file: File | null) => {
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+
+    const nextUrl = file && file.type.startsWith("image/") ? URL.createObjectURL(file) : "";
+    previewUrlRef.current = nextUrl;
+    setPreviewUrl(nextUrl);
+    setEvidence(file);
+  };
 
   const submit = async (anonymous: boolean) => {
     setIsChoosing(false);
@@ -39,12 +54,9 @@ export function ReportForm({ isAnonymous, onAnonymousChange }: ReportFormProps) 
       const coordinates = await getCurrentCoordinates();
       const point = toApiPoint(coordinates);
 
-      // The API has no location or severity field, so both ride in the note.
-      const note = [
-        description.trim(),
-        `Severity: ${severity}`,
-        location.trim() ? `Location: ${location.trim()}` : "",
-      ]
+      // The API has no location field, so the typed location rides in the note.
+      // Severity is deliberately absent — the command centre grades incidents.
+      const note = [description.trim(), location.trim() ? `Location: ${location.trim()}` : ""]
         .filter(Boolean)
         .join("\n");
 
@@ -69,7 +81,7 @@ export function ReportForm({ isAnonymous, onAnonymousChange }: ReportFormProps) 
       });
 
       setDescription("");
-      setEvidence(null);
+      selectEvidence(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (error) {
       setStatus({
@@ -108,36 +120,53 @@ export function ReportForm({ isAnonymous, onAnonymousChange }: ReportFormProps) 
           </div>
         </div>
 
-        <div className="report-severity">
-          <span className="report-label">Severity</span>
-          <div className="chip-row chip-row--quarters" role="radiogroup" aria-label="Severity">
-            {severityLevels.map((level) => (
-              <button
-                key={level}
-                type="button"
-                role="radio"
-                aria-checked={severity === level}
-                className={severity === level ? "chip is-active" : "chip"}
-                onClick={() => setSeverity(level)}
-              >
-                {level}
-              </button>
-            ))}
-          </div>
-        </div>
-
         <div>
           <span className="report-label">Capture evidence</span>
-          <button type="button" className="dropzone" onClick={() => fileInputRef.current?.click()}>
-            <Camera size={38} strokeWidth={1.4} />
-            {evidence && <span className="dropzone__caption">{evidence.name}</span>}
-          </button>
+
+          <div className="dropzone-wrap">
+            <button
+              type="button"
+              className={evidence ? "dropzone has-file" : "dropzone"}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {previewUrl ? (
+                // Object URL, so next/image would only get in the way.
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={previewUrl} alt="Selected evidence" className="dropzone__preview" />
+              ) : evidence ? (
+                <FileVideo size={38} strokeWidth={1.4} />
+              ) : (
+                <Camera size={38} strokeWidth={1.4} />
+              )}
+            </button>
+
+            {evidence && (
+              <button
+                type="button"
+                className="dropzone__clear"
+                onClick={() => {
+                  selectEvidence(null);
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                }}
+                aria-label="Remove selected evidence"
+              >
+                <X size={15} strokeWidth={2.2} />
+              </button>
+            )}
+          </div>
+
+          {evidence && (
+            <p className="dropzone__filename">
+              {evidence.name} · {(evidence.size / 1024).toFixed(0)} KB
+            </p>
+          )}
+
           <input
             ref={fileInputRef}
             type="file"
             accept="image/*,video/*"
             className="sr-only"
-            onChange={(event) => setEvidence(event.target.files?.[0] ?? null)}
+            onChange={(event) => selectEvidence(event.target.files?.[0] ?? null)}
           />
         </div>
 
@@ -153,7 +182,7 @@ export function ReportForm({ isAnonymous, onAnonymousChange }: ReportFormProps) 
               id="report-location"
               value={location}
               onChange={(event) => setLocation(event.target.value)}
-              placeholder="Warri"
+              placeholder={city || "Where did it happen?"}
             />
           </div>
         </div>

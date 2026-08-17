@@ -1,0 +1,229 @@
+@use "variables" as *;
+@use "mixins" as *;
+
+.settings-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+
+  @include respond-to(small) {
+    flex-wrap: wrap;
+  }
+}
+
+.settings-tabs {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.settings-tab {
+  height: 52px;
+  padding: 0 24px;
+  border-radius: $r-md;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: $text;
+
+  &.is-active {
+    background: $blue;
+    color: #fff;
+  }
+
+  @include respond-to(mobile) {
+    height: 40px;
+    padding: 0 14px;
+    font-size: 18px;
+  }
+}
+
+.settings-intro {
+  padding: 24px 26px 6px;
+  background: $panel;
+  border-radius: $r-panel $r-panel 0 0;
+
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  p {
+    margin-top: 6px;
+    font-size: 14.5px;
+    color: $text-muted;
+  }
+
+  @include respond-to(mobile) {
+    padding: 18px 16px 4px;
+
+    h2 {
+      font-size: 18px;
+    }
+  }
+}
+
+.settings-error {
+  margin: 0 26px;
+}
+
+.settings-row {
+  margin: 14px 20px 0;
+  padding: 18px 22px;
+  background: $surface;
+  border: 1px solid $border-soft;
+  border-radius: $r-md;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  /* The panel background continues behind every row. */
+  &:last-of-type {
+    margin-bottom: 20px;
+  }
+
+  &__text {
+    min-width: 0;
+
+    h3 {
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    p {
+      margin-top: 5px;
+      font-size: 13.5px;
+      color: $text-muted;
+    }
+  }
+
+  &--stacked {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  &__detail {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid $border-soft;
+  }
+
+  @include respond-to(mobile) {
+    margin: 12px 12px 0;
+    padding: 14px 14px;
+
+    &__text h3 {
+      font-size: 15px;
+    }
+
+    &__text p {
+      font-size: 12.5px;
+    }
+  }
+}
+
+/* The rows sit on the panel, so wrap them in its background. */
+.settings-intro + .auth-status,
+.settings-intro ~ .settings-row {
+  background-clip: padding-box;
+}
+
+.settings-timeout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14.5px;
+  color: $text-muted;
+
+  select {
+    height: 40px;
+    padding: 0 10px;
+    background: $panel;
+    border: 1px solid $border-soft;
+    border-radius: $r-xs;
+    color: $text;
+    outline: none;
+    cursor: pointer;
+  }
+}
+
+.settings-countdown {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+
+  &__time {
+    font-size: 26px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: $blue;
+
+    &.is-urgent {
+      color: $critical;
+    }
+  }
+}
+
+.settings-caveat {
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: $text-muted;
+}
+
+/* ------------------------------------------------------------------ *
+ * Toggle switch
+ * ------------------------------------------------------------------ */
+
+.toggle {
+  position: relative;
+  flex: 0 0 auto;
+  width: 62px;
+  height: 32px;
+  padding: 0;
+  border-radius: $r-pill;
+  background: #e6e8eb;
+  transition: background-color 0.18s ease;
+
+  &__knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: $surface;
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.24);
+    transition: transform 0.18s ease;
+  }
+
+  &.is-on {
+    background: $blue;
+
+    .toggle__knob {
+      transform: translateX(30px);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+/* The settings body sits on the grey panel like the profile panels do. */
+.settings-panel {
+  background: $panel;
+  border-radius: $r-panel;
+}

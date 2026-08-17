@@ -2,13 +2,13 @@
 
 import { PageShell } from "@/components/layout/PageShell";
 import { AlertList } from "@/components/alerts/AlertList";
-import { useUser } from "@/components/auth/RouteGuard";
+import { useCitizenData } from "@/components/citizen/CitizenDataProvider";
 
 export default function AlertsPage() {
-  const user = useUser();
+  const { city } = useCitizenData();
 
   return (
-    <PageShell title="Alerts" location={user.location}>
+    <PageShell title="Alerts" location={city}>
       <AlertList />
     </PageShell>
   );

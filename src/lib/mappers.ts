@@ -1,5 +1,10 @@
 import { profileDefaults, type IncidentItem, type Severity, type TransitCorridor, type UserProfile } from "@/data/dashboard";
-import type { IncidentResponse, RouteResponse, UserResponse } from "@/services/types";
+import type {
+  CorridorWaypoint,
+  NearbyIncidentResponse,
+  TransitCorridorResponse,
+  UserResponse,
+} from "@/services/types";
 import { API_BASE_URL } from "@/services/api";
 
 const SEVERITIES: Severity[] = ["Critical", "High", "Medium", "Low"];
@@ -15,27 +20,96 @@ export function formatCorridorName(name: string): string {
   return name.replace(/^(\S+)-(\S+)/, "$1 → $2");
 }
 
-export function toIncidentItem(incident: IncidentResponse): IncidentItem {
+/**
+ * The consolidated dashboard pre-formats distance and bearing, so this needs
+ * no arithmetic — it just assembles the "1.2 km NE · 14:32" line.
+ */
+export function toNearbyIncidentItem(incident: NearbyIncidentResponse): IncidentItem {
+  const distance = [incident.distance_formatted, incident.cardinal_direction]
+    .filter(Boolean)
+    .join(" ");
+
   return {
     id: incident.id,
     title: incident.type,
-    distance: incident.location_name,
-    time: incident.time,
+    distance: distance || incident.location_name,
+    time: incident.time_formatted,
     severity: toSeverity(incident.severity),
   };
 }
 
-export function toTransitCorridor(route: RouteResponse): TransitCorridor {
+export function toDashboardCorridor(corridor: TransitCorridorResponse): TransitCorridor {
   return {
-    id: route.id,
-    name: formatCorridorName(route.name),
-    description: `${route.risk_pct}% risk · ${route.incident_count} ${
-      route.incident_count === 1 ? "incident" : "incidents"
-    } today`,
-    distance: route.distance_km,
-    severity: toSeverity(route.risk_level),
+    id: corridor.id,
+    name: formatCorridorName(corridor.name),
+    description: `${corridor.risk_pct}% risk · ${corridor.incident_count} incidents today`,
+    distance: corridor.distance_km,
+    severity: toSeverity(corridor.severity || corridor.risk_level),
   };
 }
+
+export type CorridorLine = {
+  id: string;
+  /** `[lon, lat]` pairs, GeoJSON order. */
+  coordinates: [number, number][];
+  color: string;
+  name: string;
+};
+
+/**
+ * Waypoints arrive either as named objects or as bare pairs. Named keys are
+ * unambiguous; a bare pair is assumed to be `[lon, lat]` (GeoJSON order),
+ * which cannot be inferred from the values themselves because Delta State's
+ * latitude and longitude ranges overlap.
+ */
+function toLngLat(point: CorridorWaypoint): [number, number] | null {
+  if (Array.isArray(point)) {
+    const [a, b] = point;
+    return Number.isFinite(a) && Number.isFinite(b) ? [a, b] : null;
+  }
+
+  const lat = point.lat ?? point.latitude;
+  const lon = point.lon ?? point.lng ?? point.longitude;
+  return Number.isFinite(lat) && Number.isFinite(lon) ? [lon as number, lat as number] : null;
+}
+
+/**
+ * Builds the polyline for a corridor. Returns null when the backend has not
+ * populated geometry yet, so nothing is drawn rather than a wrong line.
+ */
+export function toCorridorLine(corridor: TransitCorridorResponse): CorridorLine | null {
+  const coordinates: [number, number][] = [];
+
+  if (Number.isFinite(corridor.start_lat) && Number.isFinite(corridor.start_lon)) {
+    coordinates.push([corridor.start_lon as number, corridor.start_lat as number]);
+  }
+
+  (corridor.waypoints ?? []).forEach((point) => {
+    const pair = toLngLat(point);
+    if (pair) coordinates.push(pair);
+  });
+
+  if (Number.isFinite(corridor.end_lat) && Number.isFinite(corridor.end_lon)) {
+    coordinates.push([corridor.end_lon as number, corridor.end_lat as number]);
+  }
+
+  // A line needs two distinct ends.
+  if (coordinates.length < 2) return null;
+
+  return {
+    id: String(corridor.id),
+    coordinates,
+    color: corridor.color || SEVERITY_COLOR[toSeverity(corridor.severity || corridor.risk_level)],
+    name: formatCorridorName(corridor.name),
+  };
+}
+
+export const SEVERITY_COLOR: Record<Severity, string> = {
+  Critical: "#ef4136",
+  High: "#f7861b",
+  Medium: "#f5b70a",
+  Low: "#16b364",
+};
 
 /** Splits the API's single display name back into the two form fields. */
 export function splitName(name: string): { firstName: string; lastName: string } {
@@ -66,8 +140,8 @@ export function toUserProfile(user: UserResponse): UserProfile {
     phoneNumber: user.phone ?? "",
     emergencyContact: user.emergency_contact ?? "",
     nin: user.nin ?? "",
-    // The API has no home location field — keep the fixture value for the chip.
-    location: profileDefaults.location,
+    // Resolved per-request by the citizen dashboard, not stored on the user.
+    location: "",
     avatar: toAvatarUrl(user.avatar_url),
   };
 }

@@ -1,0 +1,312 @@
+@use "variables" as *;
+@use "mixins" as *;
+
+/* ------------------------------------------------------------------ *
+ * Response progress stepper
+ * ------------------------------------------------------------------ */
+
+.progress-track {
+  display: flex;
+  align-items: flex-start;
+  margin: 0;
+  padding: 8px 4px 4px;
+  list-style: none;
+}
+
+.progress-step {
+  position: relative;
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+
+  &__icon {
+    @include flex-center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: $panel;
+    color: $text-muted;
+  }
+
+  &__label {
+    margin-top: 10px;
+    font-size: 14px;
+    color: $text-muted;
+  }
+
+  &__time {
+    margin-top: 4px;
+    font-size: 11.5px;
+    color: $text-muted;
+  }
+
+  /* Sits between this step's icon and the next one. */
+  &__bar {
+    position: absolute;
+    top: 19px;
+    left: calc(50% + 28px);
+    right: calc(-50% + 28px);
+    height: 2px;
+    background: $border;
+
+    &.is-filled {
+      background: $blue;
+    }
+  }
+
+  &.is-reached {
+    .progress-step__icon {
+      background: $blue;
+      color: #fff;
+    }
+
+    .progress-step__label {
+      color: $blue;
+      font-weight: 500;
+    }
+
+    .progress-step__time {
+      color: $blue;
+    }
+  }
+
+  @include respond-to(mobile) {
+    &__label {
+      font-size: 12px;
+    }
+
+    &__bar {
+      left: calc(50% + 22px);
+      right: calc(-50% + 22px);
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Active incident summary
+ * ------------------------------------------------------------------ */
+
+.detail-tabs--single {
+  grid-template-columns: 1fr;
+
+  span {
+    @include flex-center;
+    height: 42px;
+    border-radius: $r-xs;
+    background: $surface;
+    font-size: 15px;
+    font-weight: 600;
+    box-shadow: $shadow-card;
+  }
+}
+
+.btn--success {
+  background: #16a34a;
+  color: #fff;
+
+  &:hover:not(:disabled) {
+    background: #128a3e;
+  }
+}
+
+.unit-primary-action {
+  width: 100%;
+  height: 52px;
+  margin-top: 20px;
+}
+
+.unit-resolved-note {
+  margin-top: 20px;
+  padding: 14px;
+  background: $low-bg;
+  border-radius: $r-xs;
+  text-align: center;
+  font-size: 13.5px;
+  color: #0f9d58;
+}
+
+.evidence-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+
+  .btn {
+    width: 100%;
+  }
+}
+
+.evidence-empty {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 12.5px;
+  color: $text-muted;
+}
+
+/* ------------------------------------------------------------------ *
+ * Backup request
+ * ------------------------------------------------------------------ */
+
+.backup-panel {
+  margin: 0 10px 10px;
+  padding: 18px 20px 20px;
+  background: $critical-bg;
+  border: 1px dashed $critical;
+  border-radius: $r-md;
+
+  &__title {
+    font-size: 15px;
+    font-weight: 600;
+    color: $critical;
+  }
+
+  &__text {
+    margin-top: 6px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: $text-soft;
+  }
+
+  &__button {
+    width: 100%;
+    height: 48px;
+    margin-top: 16px;
+    border-radius: $r-pill;
+    background: #ef4136;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+
+    &:hover:not(:disabled) {
+      background: #d63a30;
+    }
+
+    &:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Clearance report
+ * ------------------------------------------------------------------ */
+
+.clearance-modal {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 30px 28px 26px;
+  background: $surface;
+  border-radius: $r-panel;
+  box-shadow: $shadow-modal;
+}
+
+.clearance-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+
+  @include respond-to(mobile) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.clearance-notes {
+  margin-top: 18px;
+
+  textarea {
+    width: 100%;
+    height: 88px;
+    padding: 12px 14px;
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: $r-sm;
+    resize: vertical;
+    outline: none;
+    font-size: 14px;
+
+    &:focus {
+      border-color: $blue;
+      box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.12);
+    }
+  }
+}
+
+.clearance-successful {
+  margin-top: 16px;
+}
+
+/* ------------------------------------------------------------------ *
+ * Mobile — no comps for the unit portal, so this is an adaptation:
+ * the three columns stack as case list → map + progress → active case,
+ * and the primary action is pinned so it stays reachable while scrolling.
+ * ------------------------------------------------------------------ */
+
+@include respond-to(mobile) {
+  .progress-track {
+    padding: 6px 0 2px;
+  }
+
+  .progress-step {
+    &__icon {
+      width: 34px;
+      height: 34px;
+    }
+
+    &__label {
+      margin-top: 8px;
+      font-size: 11px;
+      line-height: 1.25;
+    }
+
+    &__time {
+      font-size: 10px;
+    }
+
+    &__bar {
+      top: 16px;
+      left: calc(50% + 20px);
+      right: calc(-50% + 20px);
+    }
+  }
+
+  .detail-tabs--single span {
+    height: 38px;
+    font-size: 14px;
+  }
+
+  .unit-primary-action {
+    height: 48px;
+  }
+
+  .evidence-actions {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .backup-panel {
+    margin: 0 10px 12px;
+    padding: 14px 16px 16px;
+
+    &__button {
+      height: 46px;
+    }
+  }
+
+  .clearance-modal {
+    max-height: calc(100dvh - 24px);
+    padding: 24px 18px 20px;
+    border-radius: 20px 20px 0 0;
+  }
+
+  /* The queue is the entry point on a phone, so let it breathe. */
+  .queue__list {
+    max-height: 320px;
+  }
+}

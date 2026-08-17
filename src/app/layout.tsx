@@ -10,6 +10,8 @@ import "@/styles/report.scss";
 import "@/styles/profile.scss";
 import "@/styles/sos.scss";
 import "@/styles/admin.scss";
+import "@/styles/unit.scss";
+import "@/styles/settings.scss";
 
 const inclusiveSans = Inclusive_Sans({
   variable: "--font-inclusive-sans",

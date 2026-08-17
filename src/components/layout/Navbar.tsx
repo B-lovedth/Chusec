@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Bell, ChevronDown, LogOut, Settings, User } from "lucide-react";
+import { Bell, ChevronDown, LogOut, User } from "lucide-react";
 import { useSession } from "@/components/auth/SessionProvider";
 
 
@@ -17,7 +17,7 @@ const citizenNavItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard" },
   { label: "Alerts", href: "/alerts" },
   { label: "Report", href: "/report" },
-  { label: "Profile", href: "/profile" },
+  { label: "Settings", href: "/settings" },
 ];
 
 type NavbarProps = {
@@ -30,7 +30,7 @@ type NavbarProps = {
 
 export function Navbar({
   items = citizenNavItems,
-  profileHref = "/profile",
+  profileHref = "/settings",
   alwaysVisible = false,
 }: NavbarProps) {
   const pathname = usePathname();
@@ -119,16 +119,6 @@ export function Navbar({
               >
                 <User size={16} strokeWidth={1.9} />
                 My Profile
-              </Link>
-
-              <Link
-                href={profileHref}
-                role="menuitem"
-                className="topbar__menu__item"
-                onClick={() => setMenuOpen(false)}
-              >
-                <Settings size={16} strokeWidth={1.9} />
-                Account settings
               </Link>
 
               <hr className="topbar__menu__divider" />

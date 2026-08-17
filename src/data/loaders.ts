@@ -1,10 +1,11 @@
-import { listIncidents, listIncidentHistory } from "@/services/incidents.service";
-import { listRoutes } from "@/services/routes.service";
-import { getFieldUnits } from "@/services/dashboard.service";
-import { toIncidentItem, toTransitCorridor } from "@/lib/mappers";
+import {
+  listAssignedIncidents,
+  listIncidents,
+  listIncidentHistory,
+} from "@/services/incidents.service";
+import { getFieldUnits, listMembers } from "@/services/dashboard.service";
 import { toCommandIncident, toSecurityUnit } from "@/lib/admin-mappers";
-import type { IncidentItem, TransitCorridor } from "@/data/dashboard";
-import type { CommandIncident, SecurityUnit } from "@/data/admin";
+import type { CommandIncident, Member, SecurityUnit } from "@/data/admin";
 import type { AlertTone, SafetyAlert } from "@/data/alerts";
 
 function toAlertTone(severity: string | null | undefined): AlertTone {
@@ -20,19 +21,6 @@ function toAlertTone(severity: string | null | undefined): AlertTone {
   }
 }
 
-/**
- * Module-level so `useApiList` effects keep a stable dependency.
- */
-export async function loadNearbyIncidents(): Promise<IncidentItem[]> {
-  const incidents = await listIncidents();
-  return incidents.map(toIncidentItem);
-}
-
-export async function loadTransitCorridors(): Promise<TransitCorridor[]> {
-  const routes = await listRoutes();
-  return routes.map(toTransitCorridor);
-}
-
 /* ------------------------------------------------------------------ *
  * Command centre
  * ------------------------------------------------------------------ */
@@ -45,6 +33,25 @@ export async function loadCommandIncidents(): Promise<CommandIncident[]> {
 export async function loadIncidentHistory(): Promise<CommandIncident[]> {
   const incidents = await listIncidentHistory();
   return incidents.map(toCommandIncident);
+}
+
+/** Incidents assigned to the signed-in responding unit. */
+export async function loadAssignedIncidents(): Promise<CommandIncident[]> {
+  const incidents = await listAssignedIncidents();
+  return incidents.map(toCommandIncident);
+}
+
+export async function loadMembers(): Promise<Member[]> {
+  const members = await listMembers();
+
+  return members.map((member) => ({
+    id: String(member.id),
+    name: member.name,
+    role: member.role,
+    email: member.email,
+    // The API models activation, not invite state; unverified reads as pending.
+    status: member.is_verified ? "Active" : "Pending",
+  }));
 }
 
 export async function loadSecurityUnits(): Promise<SecurityUnit[]> {

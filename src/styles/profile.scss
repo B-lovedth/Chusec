@@ -177,6 +177,114 @@
   }
 }
 
+/* ------------------------------------------------------------------ *
+ * Danger zone
+ * ------------------------------------------------------------------ */
+
+.danger-panel {
+  margin-top: 22px;
+  padding: 24px 26px 26px;
+  background: $panel;
+  border: 1px solid #f6d5d2;
+  border-radius: $r-panel;
+
+  &__head h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: $critical;
+  }
+
+  &__text {
+    margin-top: 8px;
+    max-width: 560px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: $text-soft;
+  }
+
+  &__button {
+    margin-top: 18px;
+    background: $critical;
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      background: #d63a30;
+    }
+  }
+
+  @include respond-to(mobile) {
+    padding: 18px 16px 20px;
+
+    &__button {
+      width: 100%;
+    }
+  }
+}
+
+.confirm-modal {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  padding: 30px 28px 26px;
+  background: $surface;
+  border-radius: $r-panel;
+  box-shadow: $shadow-modal;
+
+  &__icon {
+    @include flex-center;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: $critical-bg;
+    color: $critical;
+  }
+
+  &__title {
+    margin-top: 16px;
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  &__text {
+    margin-top: 8px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: $text-soft;
+  }
+
+  &__field {
+    margin-top: 20px;
+
+    strong {
+      color: $text;
+      font-weight: 700;
+    }
+  }
+
+  &__error {
+    margin-top: 14px;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 22px;
+
+    .btn {
+      flex: 1 1 0;
+      margin-top: 0;
+    }
+  }
+
+  @include respond-to(small) {
+    padding: 26px 20px 22px;
+
+    &__actions {
+      flex-direction: column;
+    }
+  }
+}
+
 .profile-note {
   margin: -8px 0 18px;
   font-size: 13px;

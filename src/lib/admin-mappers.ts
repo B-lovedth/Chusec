@@ -71,6 +71,10 @@ export function toCommandIncident(incident: IncidentResponse): CommandIncident {
     location: incident.location_name,
     tag: incident.is_sos ? { kind: "sos" } : { kind: "severity", value: severity },
     point: toMapPoint(incident),
+    coordinates:
+      incident.lat !== null && incident.lon !== null
+        ? { lat: incident.lat, lon: incident.lon }
+        : null,
     severity,
     reportedBy: incident.is_sos ? "SOS beacon" : "Citizen report",
     narrative: `${incident.type} reported at ${incident.location_name}. ${incident.report_count} report${
