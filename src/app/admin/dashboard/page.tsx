@@ -8,18 +8,20 @@ import { IncidentDetailPanel } from "@/components/admin/IncidentDetailPanel";
 import { IncidentsPerHourChart, WeeklyResolutionChart, type WeeklySeries } from "@/components/admin/Charts";
 import { ListState } from "@/components/ui/ListState";
 import { useApiList } from "@/hooks/useApiList";
-import { loadCommandIncidents } from "@/data/loaders";
+import { loadCommandIncidents, loadSecurityUnits } from "@/data/loaders";
 import { getAnalytics, getDashboardStats } from "@/services/dashboard.service";
 import { toCommandStats, toHourlySeries } from "@/lib/admin-mappers";
 import { listIncidents } from "@/services/incidents.service";
 import type { CommandStat } from "@/data/admin";
 
 export default function CommandDashboardPage() {
-  const { status, items: incidents, error } = useApiList(loadCommandIncidents);
+  const { status, items: incidents, error, reload } = useApiList(loadCommandIncidents);
+  const { items: fieldUnits } = useApiList(loadSecurityUnits);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const [stats, setStats] = useState<CommandStat[]>([]);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [statsNonce, setStatsNonce] = useState(0);
   const [hourly, setHourly] = useState<number[]>([]);
   const [weekly, setWeekly] = useState<WeeklySeries[]>([]);
 
@@ -59,9 +61,17 @@ export default function CommandDashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [statsNonce]);
 
   const select = useCallback((id: string) => setSelectedId(id), []);
+
+  /** A resolved incident leaves the active queue, so re-pull both the list
+   *  and the counters instead of leaving stale data on screen. */
+  const handleResolved = useCallback(() => {
+    setSelectedId(null);
+    reload();
+    setStatsNonce((value) => value + 1);
+  }, [reload]);
 
   const selected = incidents.find((incident) => incident.id === selectedId) ?? incidents[0] ?? null;
 
@@ -81,13 +91,18 @@ export default function CommandDashboardPage() {
         />
 
         <div>
-          <CommandMap incidents={incidents} selectedId={selected?.id ?? ""} onSelect={select} />
+          <CommandMap
+            incidents={incidents}
+            selectedId={selected?.id ?? ""}
+            onSelect={select}
+            units={fieldUnits}
+          />
           <IncidentsPerHourChart series={hourly} />
           <WeeklyResolutionChart data={weekly} />
         </div>
 
         {selected ? (
-          <IncidentDetailPanel incident={selected} key={selected.id} />
+          <IncidentDetailPanel incident={selected} key={selected.id} onResolved={handleResolved} />
         ) : (
           <section className="detail-panel">
             <div className="detail-body">

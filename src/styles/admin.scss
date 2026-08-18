@@ -371,6 +371,7 @@
 
 /* Mapbox positions the marker element itself, so this only styles it. */
 .mapbox-marker {
+  position: relative;
   width: 18px;
   height: 18px;
   padding: 0;
@@ -382,6 +383,24 @@
 
   &.is-selected {
     box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.9), 0 0 0 9px rgba(239, 65, 54, 0.4);
+  }
+
+  /* Response units: square and dark, so shape alone separates them from the
+     round severity-coloured incident dots. */
+  &.is-unit {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    background: #1f2933;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.9);
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 5px;
+      border-radius: 1px;
+      background: var(--marker, #16b364);
+    }
   }
 
   /* The citizen's own position reads as a live dot, not a pin. */
@@ -451,6 +470,41 @@
     flex-direction: column;
     gap: 7px;
     margin-top: 10px;
+  }
+}
+
+.heat-legend__shapes {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid $border-soft;
+}
+
+/* Mirrors the marker shapes exactly: round = incident, square = unit. */
+.legend-key {
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+
+  &--incident {
+    border-radius: 50%;
+    background: $critical;
+  }
+
+  &--unit {
+    position: relative;
+    border-radius: 3px;
+    background: #1f2933;
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 3px;
+      border-radius: 1px;
+      background: $low;
+    }
   }
 }
 

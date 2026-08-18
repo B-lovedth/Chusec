@@ -19,6 +19,12 @@ export type MapMarker = {
   label?: string;
   /** The citizen's own position — drawn as a pulsing dot, not an incident. */
   isUser?: boolean;
+  /**
+   * Controls the marker's shape so the map is readable at a glance:
+   * incidents are round, response units are square. Colour alone is not
+   * enough — it already encodes severity, and it fails for colour-blind users.
+   */
+  kind?: "incident" | "unit";
   /** Shown on hover, and on tap where there is no hover. */
   tooltip?: MarkerTooltip;
 };
@@ -242,6 +248,7 @@ export function MapboxMap({
         element.type = "button";
         element.className = [
           "mapbox-marker",
+          marker.kind === "unit" ? "is-unit" : "",
           marker.isUser ? "is-user" : "",
           marker.selected ? "is-selected" : "",
         ]

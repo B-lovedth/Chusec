@@ -64,7 +64,12 @@ export type Member = {
 export type SecurityUnit = {
   id: string;
   name: string;
-  agency: Agency;
+  /** Null when the API has not classified the unit — do not invent one. */
+  agency: Agency | null;
+  callsign: string | null;
+  lat: number | null;
+  lon: number | null;
+  isActive: boolean;
   state: string;
   address: string;
   lga: string;

@@ -137,7 +137,7 @@ export default function UnitPage() {
                         </td>
                         <td>{unit.name}</td>
                         <td>
-                          <AgencyBadge agency={unit.agency} />
+                          {unit.agency ? <AgencyBadge agency={unit.agency} /> : <span className="data-table__sub">—</span>}
                         </td>
                         <td>{unit.state}</td>
                         <td>

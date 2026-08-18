@@ -7,7 +7,7 @@ import { IncidentQueue } from "@/components/admin/IncidentQueue";
 import { ResponseProgress, type UnitStatus } from "@/components/unit/ResponseProgress";
 import { ClearIncidentModal } from "@/components/unit/ClearIncidentModal";
 import { useApiList } from "@/hooks/useApiList";
-import { loadAssignedIncidents } from "@/data/loaders";
+import { loadAssignedIncidents, loadSecurityUnits } from "@/data/loaders";
 import {
   clearIncident,
   requestBackup,
@@ -36,6 +36,7 @@ function nowLabel() {
 
 export default function UnitDashboardPage() {
   const { status, items: incidents, error } = useApiList(loadAssignedIncidents);
+  const { items: fieldUnits } = useApiList(loadSecurityUnits);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const [unitStatus, setUnitStatus] = useState<UnitStatus>("dispatched");
@@ -158,7 +159,12 @@ export default function UnitDashboardPage() {
         />
 
         <div>
-          <CommandMap incidents={incidents} selectedId={selected?.id ?? ""} onSelect={select} />
+          <CommandMap
+            incidents={incidents}
+            selectedId={selected?.id ?? ""}
+            onSelect={select}
+            units={fieldUnits}
+          />
           {selected && (
             <ResponseProgress
               reference={selected.reference}

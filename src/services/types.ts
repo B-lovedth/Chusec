@@ -275,6 +275,7 @@ export type UnitResponse = {
   lat: number | null;
   lon: number | null;
   agency: string | null;
+  state?: string | null;
   lga: string | null;
   address: string | null;
   notes: string | null;

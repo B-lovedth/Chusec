@@ -29,6 +29,8 @@ export function AddUnitModal({ onClose, onCreated }: AddUnitModalProps) {
     agency: "Nigeria Police Force",
     phone: "",
     email: "",
+    // Matches the API's own default for this field.
+    state: "Delta",
     lga: "",
     address: "",
     responding_unit: "",
@@ -59,6 +61,7 @@ export function AddUnitModal({ onClose, onCreated }: AddUnitModalProps) {
         agency: form.agency,
         phone: form.phone.trim() || null,
         email: form.email.trim() || null,
+        state: form.state.trim() || null,
         lga: form.lga.trim() || null,
         address: form.address.trim() || null,
         responding_unit: form.responding_unit.trim() || null,
@@ -121,6 +124,14 @@ export function AddUnitModal({ onClose, onCreated }: AddUnitModalProps) {
           </span>
         </label>
 
+        <TextField
+          label="State"
+          name="state"
+          value={form.state}
+          onChange={set("state")}
+          placeholder="Delta"
+          disabled={isSubmitting}
+        />
         <TextField
           label="LGA"
           name="lga"

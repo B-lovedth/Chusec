@@ -86,13 +86,18 @@ export function IncidentDetailPanel({ incident, onResolved }: IncidentDetailPane
     }
   };
 
-  const handleDispatch = async (unitName: string) => {
+  /**
+   * Tracked by unit id, not name. `respondingUnit` is a squad label like
+   * "Marine Police Squad" that several units share, so keying on it flipped
+   * every matching card to "Alerted" at once.
+   */
+  const handleDispatch = async (unitId: string, unitName: string) => {
     setActionError("");
-    setPendingUnit(unitName);
+    setPendingUnit(unitId);
 
     try {
       await dispatchUnit(incidentId, unitName);
-      setDispatched((current) => [...new Set([...current, unitName])]);
+      setDispatched((current) => [...new Set([...current, unitId])]);
     } catch (error) {
       setActionError(error instanceof Error ? error.message : "Could not alert that unit.");
     } finally {
@@ -260,7 +265,7 @@ export function IncidentDetailPanel({ incident, onResolved }: IncidentDetailPane
             >
               {units.slice(0, 5).map((unit) => (
                 <article className="force-card" key={unit.id}>
-                  <AgencyBadge agency={unit.agency} />
+                  {unit.agency && <AgencyBadge agency={unit.agency} />}
                   <h3 className="force-card__station">{unit.name}</h3>
                   <p className="force-card__address">
                     {unit.address}
@@ -270,17 +275,20 @@ export function IncidentDetailPanel({ incident, onResolved }: IncidentDetailPane
                   <div className="force-card__foot">
                     <span className="force-card__contact">
                       <UserRound size={15} strokeWidth={1.8} />
-                      {unit.teamLead}
+                      {/* Callsign identifies a unit; team lead is often unset. */}
+                      {unit.callsign ?? unit.teamLead}
                     </span>
                     <button
                       type="button"
                       className="alert-force-button"
-                      onClick={() => handleDispatch(unit.respondingUnit || unit.name)}
-                      disabled={pendingUnit !== null}
+                      // The API dispatches by unit name.
+                      onClick={() => handleDispatch(unit.id, unit.name)}
+                      // Only this card is busy — not every other one.
+                      disabled={pendingUnit === unit.id || dispatched.includes(unit.id)}
                     >
-                      {dispatched.includes(unit.respondingUnit || unit.name)
+                      {dispatched.includes(unit.id)
                         ? "Alerted"
-                        : pendingUnit === (unit.respondingUnit || unit.name)
+                        : pendingUnit === unit.id
                           ? "Alerting..."
                           : "Alert"}
                     </button>

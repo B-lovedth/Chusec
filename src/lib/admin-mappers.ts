@@ -111,11 +111,13 @@ const KNOWN_AGENCIES: Agency[] = [
   "FRSC",
 ];
 
-function toAgency(value: string | null): Agency {
+/** Returns null rather than guessing — badging every unclassified unit as
+ *  police would be a fabrication on a law-enforcement screen. */
+function toAgency(value: string | null | undefined): Agency | null {
   const match = KNOWN_AGENCIES.find(
     (agency) => agency.toLowerCase() === (value ?? "").trim().toLowerCase(),
   );
-  return match ?? "Nigeria Police Force";
+  return match ?? null;
 }
 
 /** `responders` and `vehicles` arrive as delimited strings. */
@@ -132,7 +134,11 @@ export function toSecurityUnit(unit: UnitResponse): SecurityUnit {
     id: String(unit.id),
     name: unit.name,
     agency: toAgency(unit.agency),
-    state: "Delta State",
+    callsign: unit.callsign ?? null,
+    lat: unit.lat ?? null,
+    lon: unit.lon ?? null,
+    isActive: unit.is_active,
+    state: unit.state ?? "—",
     address: unit.address ?? "—",
     lga: unit.lga ?? "",
     phone: unit.phone ?? "—",
