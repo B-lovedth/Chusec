@@ -1240,6 +1240,102 @@
 }
 
 /* ------------------------------------------------------------------ *
+ * Create forms (Add unit / Add member)
+ * ------------------------------------------------------------------ */
+
+.form-modal {
+  width: 100%;
+  max-width: 620px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  background: $surface;
+  border-radius: $r-panel;
+  box-shadow: $shadow-modal;
+
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 24px 18px;
+    border-bottom: 1px solid $border-soft;
+
+    h2 {
+      font-size: 19px;
+      font-weight: 700;
+    }
+
+    p {
+      margin-top: 5px;
+      font-size: 13px;
+      color: $text-muted;
+    }
+
+    button {
+      @include flex-center;
+      flex: 0 0 auto;
+      width: 30px;
+      height: 30px;
+      border-radius: $r-xs;
+      color: $text;
+
+      &:hover {
+        background: $panel;
+      }
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px 24px 24px;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+
+    @include respond-to(mobile) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 4px;
+
+    .btn {
+      flex: 1 1 0;
+    }
+  }
+
+  @include respond-to(mobile) {
+    max-height: calc(100dvh - 24px);
+    border-radius: 20px 20px 0 0;
+
+    &__head,
+    &__body {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+  }
+}
+
+/* Select styled to match the text inputs. */
+.control__select {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  background: none;
+  outline: none;
+  cursor: pointer;
+}
+
+/* ------------------------------------------------------------------ *
  * Broadcast tab
  * ------------------------------------------------------------------ */
 
@@ -1251,6 +1347,42 @@
   margin-top: 8px;
   font-size: 12px;
   color: $text-muted;
+}
+
+.broadcast-form__label {
+  font-size: 15px;
+  color: $text-muted;
+}
+
+.broadcast-templates {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.broadcast-template {
+  padding: 13px 15px;
+  background: $panel;
+  border: 1px solid transparent;
+  border-radius: $r-xs;
+  text-align: left;
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: $text;
+
+  &:hover {
+    border-color: $border;
+  }
+
+  &.is-active {
+    background: $blue-tint;
+    border-color: $blue;
+  }
+}
+
+.broadcast-send {
+  width: 100%;
+  height: 52px;
 }
 
 .broadcast-form {

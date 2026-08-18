@@ -6,7 +6,12 @@ import { SeverityBadge } from "@/components/ui/SeverityBadge";
 import { ListState } from "@/components/ui/ListState";
 import { useApiList } from "@/hooks/useApiList";
 import { loadSecurityUnits } from "@/data/loaders";
-import { broadcastIncident, dispatchUnit, resolveIncident } from "@/services/incidents.service";
+import {
+  broadcastIncident,
+  dispatchUnit,
+  resolveIncident,
+  updateIncidentSeverity,
+} from "@/services/incidents.service";
 import type { Agency, CommandIncident } from "@/data/admin";
 import type { Severity } from "@/data/dashboard";
 
@@ -27,7 +32,14 @@ export function AgencyBadge({ agency }: { agency: Agency }) {
   return <span className={`agency-badge agency-badge--${agencyModifier[agency]}`}>{agency}</span>;
 }
 
-const BROADCAST_RANGE_KM = 10;
+/** The API accepts a 2km-50km radius. */
+const BROADCAST_RANGES = [2, 5, 10, 20, 30, 50];
+
+const BROADCAST_TEMPLATES = [
+  'ALERT: Active threat on Warri-Asaba corridor. Avoid travel.',
+  'WARNING: Fake checkpoint near Asaba. Do not stop.',
+  'UPDATE: Situation resolved. Normal traffic may resume.',
+];
 
 type IncidentDetailPanelProps = {
   incident: CommandIncident;
@@ -38,6 +50,7 @@ export function IncidentDetailPanel({ incident, onResolved }: IncidentDetailPane
   const [tab, setTab] = useState<"detail" | "broadcast">("detail");
   const [status, setStatus] = useState<Severity>(incident.severity);
   const [statusOpen, setStatusOpen] = useState(true);
+  const [isGrading, setIsGrading] = useState(false);
 
   const { status: unitsStatus, items: units, error: unitsError } = useApiList(loadSecurityUnits);
 
@@ -48,9 +61,30 @@ export function IncidentDetailPanel({ incident, onResolved }: IncidentDetailPane
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const [broadcastNote, setBroadcastNote] = useState("");
   const [broadcastResult, setBroadcastResult] = useState("");
+  const [rangeKm, setRangeKm] = useState(2);
 
   const incidentId = Number(incident.id);
   const hasDispatched = dispatched.length > 0;
+
+  /** Persists the grade — the dropdown used to change local state only. */
+  const handleSeverity = async (next: Severity) => {
+    if (next === status) return;
+
+    const previous = status;
+    setStatus(next);
+    setActionError("");
+    setIsGrading(true);
+
+    try {
+      await updateIncidentSeverity(incidentId, next);
+    } catch (error) {
+      // Put the badge back so it never claims a grade the server rejected.
+      setStatus(previous);
+      setActionError(error instanceof Error ? error.message : "Could not update the severity.");
+    } finally {
+      setIsGrading(false);
+    }
+  };
 
   const handleDispatch = async (unitName: string) => {
     setActionError("");
@@ -87,8 +121,8 @@ export function IncidentDetailPanel({ incident, onResolved }: IncidentDetailPane
     setIsBroadcasting(true);
 
     try {
-      await broadcastIncident(incidentId, BROADCAST_RANGE_KM);
-      setBroadcastResult(`Broadcast sent to citizens within ${BROADCAST_RANGE_KM} km.`);
+      await broadcastIncident(incidentId, rangeKm);
+      setBroadcastResult(`Broadcast sent to citizens within ${rangeKm} km.`);
       setBroadcastNote("");
     } catch (error) {
       setActionError(error instanceof Error ? error.message : "Could not send the broadcast.");
@@ -181,7 +215,8 @@ export function IncidentDetailPanel({ incident, onResolved }: IncidentDetailPane
                       aria-selected={option === status}
                       className="status-select__option"
                       key={option}
-                      onClick={() => setStatus(option)}
+                      onClick={() => handleSeverity(option)}
+                      disabled={isGrading}
                     >
                       <SeverityBadge severity={option} />
                       {option === status && (
@@ -258,19 +293,49 @@ export function IncidentDetailPanel({ incident, onResolved }: IncidentDetailPane
       ) : (
         <div className="detail-body">
           <form className="broadcast-form" onSubmit={handleBroadcast}>
-            <div>
-              <p className="detail-section-label" style={{ marginTop: 0 }}>
-                Alert citizens within {BROADCAST_RANGE_KM} km of this incident
-              </p>
+            <p className="broadcast-form__label">Broadcast to Public</p>
+
+            <div className="broadcast-templates">
+              {BROADCAST_TEMPLATES.map((template) => (
+                <button
+                  type="button"
+                  key={template}
+                  className={broadcastNote === template ? "broadcast-template is-active" : "broadcast-template"}
+                  onClick={() => setBroadcastNote(template)}
+                >
+                  {template}
+                </button>
+              ))}
+            </div>
+
+            <label className="field">
+              <span className="broadcast-form__label">Distance</span>
+              <span className="control">
+                <select
+                  className="control__select"
+                  value={rangeKm}
+                  onChange={(event) => setRangeKm(Number(event.target.value))}
+                  disabled={isBroadcasting}
+                  aria-label="Broadcast radius"
+                >
+                  {BROADCAST_RANGES.map((range) => (
+                    <option key={range} value={range}>
+                      {range}km
+                    </option>
+                  ))}
+                </select>
+              </span>
+            </label>
+
+            <label className="field">
+              <span className="broadcast-form__label">Description</span>
               <textarea
                 value={broadcastNote}
                 onChange={(event) => setBroadcastNote(event.target.value)}
-                placeholder="Avoid the Warri-Sapele Road corridor. Security operatives are responding."
+                placeholder="Compose custom alert..."
+                disabled={isBroadcasting}
               />
-              <p className="broadcast-hint">
-                The API broadcasts by radius only — this note is not sent with it yet.
-              </p>
-            </div>
+            </label>
 
             {actionError && (
               <div className="auth-status auth-status--error" role="alert">
@@ -284,9 +349,13 @@ export function IncidentDetailPanel({ incident, onResolved }: IncidentDetailPane
               </div>
             )}
 
-            <button type="submit" className="btn btn--primary" disabled={isBroadcasting}>
-              {isBroadcasting ? "Sending..." : "Send broadcast"}
+            <button type="submit" className="btn btn--primary broadcast-send" disabled={isBroadcasting}>
+              {isBroadcasting ? "Sending..." : "Broadcast push alert"}
             </button>
+
+            <p className="broadcast-hint">
+              The API broadcasts by radius only — the message text isn&apos;t sent with it yet.
+            </p>
           </form>
         </div>
       )}

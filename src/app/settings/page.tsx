@@ -11,11 +11,8 @@ import { useCitizenData } from "@/components/citizen/CitizenDataProvider";
 type SettingsTab = "profile" | "beacon";
 
 export default function SettingsPage() {
-  const { city, data } = useCitizenData();
+  const { city } = useCitizenData();
   const [tab, setTab] = useState<SettingsTab>("profile");
-  // The API is the source of truth until the user flips it in this session.
-  const [beaconOverride, setBeaconOverride] = useState<boolean | null>(null);
-  const beaconActive = beaconOverride ?? data?.is_beacon_active ?? false;
 
   return (
     <main className="page-card">
@@ -53,7 +50,7 @@ export default function SettingsPage() {
           <DeleteAccountPanel />
         </>
       ) : (
-        <StealthBeacon beaconActive={beaconActive} onBeaconChange={setBeaconOverride} />
+        <StealthBeacon />
       )}
 
       {/* Reachable from either tab — hidden on desktop, where the nav has it. */}

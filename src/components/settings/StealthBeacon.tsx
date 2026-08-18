@@ -1,21 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { TriangleAlert } from "lucide-react";
 import { Toggle } from "@/components/ui/Toggle";
-import { startBeacon, stopBeacon, pingBeacon } from "@/services/beacons.service";
+import { startBeacon, stopBeacon } from "@/services/beacons.service";
 import { updateLocation } from "@/services/auth.service";
 import { triggerSos } from "@/services/sos.service";
 import { getCurrentCoordinates, toApiPoint } from "@/lib/geolocation";
-
-/** The API pings on a 90s cadence, per the beacon's description. */
-const PING_INTERVAL_MS = 90_000;
+import { useBeacon } from "@/components/citizen/BeaconProvider";
 
 const TIMEOUT_OPTIONS = [5, 10, 15, 30, 60];
-
-type StealthBeaconProps = {
-  beaconActive: boolean;
-  onBeaconChange: (active: boolean) => void;
-};
 
 function formatCountdown(seconds: number) {
   const mins = Math.floor(seconds / 60);
@@ -23,7 +17,11 @@ function formatCountdown(seconds: number) {
   return `${mins}:${String(secs).padStart(2, "0")}`;
 }
 
-export function StealthBeacon({ beaconActive, onBeaconChange }: StealthBeaconProps) {
+export function StealthBeacon() {
+  // The ping loop and permission state live in BeaconProvider so they keep
+  // running when this screen is not mounted.
+  const { active: beaconActive, permissionLost, setActiveOverride, retry } = useBeacon();
+
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -31,8 +29,6 @@ export function StealthBeacon({ beaconActive, onBeaconChange }: StealthBeaconPro
   const [timeoutMinutes, setTimeoutMinutes] = useState(15);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [sosFired, setSosFired] = useState(false);
-
-  const pingTimer = useRef<number | null>(null);
 
   /* ---------------- Silent location beacon ---------------- */
 
@@ -56,30 +52,13 @@ export function StealthBeacon({ beaconActive, onBeaconChange }: StealthBeaconPro
         await stopBeacon();
       }
 
-      onBeaconChange(next);
+      setActiveOverride(next);
     } catch (toggleError) {
       setError(toggleError instanceof Error ? toggleError.message : "Could not change the beacon.");
     } finally {
       setIsBusy(false);
     }
   };
-
-  // Keep pinging while the beacon is on so operators see a live trail.
-  useEffect(() => {
-    if (!beaconActive) return;
-
-    const ping = async () => {
-      const coordinates = await getCurrentCoordinates();
-      if (coordinates) await pingBeacon(coordinates.lat, coordinates.lon).catch(() => undefined);
-    };
-
-    pingTimer.current = window.setInterval(ping, PING_INTERVAL_MS);
-
-    return () => {
-      if (pingTimer.current !== null) window.clearInterval(pingTimer.current);
-      pingTimer.current = null;
-    };
-  }, [beaconActive]);
 
   /* ---------------- Dead man's switch ---------------- */
 
@@ -139,6 +118,19 @@ export function StealthBeacon({ beaconActive, onBeaconChange }: StealthBeaconPro
         </div>
       )}
 
+      {beaconActive && permissionLost && (
+        <div className="beacon-warning" role="alert">
+          <TriangleAlert size={17} strokeWidth={1.9} />
+          <span>
+            The beacon is on, but this device is not sharing location — nothing is being reported. Allow
+            location for this site, then retry.
+          </span>
+          <button type="button" className="btn btn--ghost" onClick={retry}>
+            Retry
+          </button>
+        </div>
+      )}
+
       <section className="settings-row">
         <div className="settings-row__text">
           <h3>Silent location beacon</h3>
@@ -170,7 +162,6 @@ export function StealthBeacon({ beaconActive, onBeaconChange }: StealthBeaconPro
                 onChange={(event) => {
                   const minutes = Number(event.target.value);
                   setTimeoutMinutes(minutes);
-                  // Must move the deadline too, not just the displayed count.
                   setDeadline(minutes);
                 }}
                 aria-label="Trigger after"
@@ -185,7 +176,11 @@ export function StealthBeacon({ beaconActive, onBeaconChange }: StealthBeaconPro
             </div>
 
             <div className="settings-countdown">
-              <span className={secondsLeft <= 60 ? "settings-countdown__time is-urgent" : "settings-countdown__time"}>
+              <span
+                className={
+                  secondsLeft <= 60 ? "settings-countdown__time is-urgent" : "settings-countdown__time"
+                }
+              >
                 {sosFired ? "SOS sent" : formatCountdown(secondsLeft)}
               </span>
               <button type="button" className="btn btn--ghost" onClick={checkIn}>

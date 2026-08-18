@@ -26,6 +26,8 @@
       flex-wrap: wrap;
       padding: 16px 14px 12px;
       gap: 12px;
+      /* Becomes the account menu's containing block — see `.topbar__menu`. */
+      position: relative;
     }
   }
 }
@@ -111,6 +113,11 @@
 
   @include respond-to(mobile) {
     gap: 10px;
+    flex: 1 1 auto;
+    /* Without this the nav's `width: 100%` just shrinks instead of wrapping,
+       leaving the bell and account chip stranded on the left of the row. */
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 }
 
@@ -197,6 +204,12 @@
 .topbar__account {
   position: relative;
   flex: 0 0 auto;
+
+  /* Hands positioning of the menu up to the top bar itself, so the menu is
+     anchored to the viewport edge instead of to this narrow chip. */
+  @include respond-to(mobile) {
+    position: static;
+  }
 }
 
 .topbar__menu {
@@ -211,6 +224,14 @@
   border-radius: $r-md;
   box-shadow: 0 12px 30px rgba(16, 24, 40, 0.14);
   animation: topbar-menu-in 0.14s ease both;
+
+  /* Positioned against the top bar rather than the chip, so a narrow chip
+     near the left edge can't drag a 200px menu off-screen. */
+  @include respond-to(mobile) {
+    right: 14px;
+    left: auto;
+    max-width: calc(100vw - 28px);
+  }
 
   &__item {
     display: flex;

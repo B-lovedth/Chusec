@@ -9,6 +9,7 @@ import { SessionProvider } from "@/components/auth/SessionProvider";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { DesktopOnly } from "@/components/layout/DesktopOnly";
 import { CitizenDataProvider } from "@/components/citizen/CitizenDataProvider";
+import { BeaconProvider } from "@/components/citizen/BeaconProvider";
 
 const commandNavItems: NavItem[] = [
   { label: "Dashboard", href: "/admin/dashboard" },
@@ -56,7 +57,10 @@ function AppChrome({ children }: GlobalChromeProps) {
     <>
       <Navbar />
       <RouteGuard>
-        <CitizenDataProvider>{children}</CitizenDataProvider>
+        <CitizenDataProvider>
+          {/* Pings run app-wide, not just on the Settings screen. */}
+          <BeaconProvider>{children}</BeaconProvider>
+        </CitizenDataProvider>
       </RouteGuard>
       <SosLauncher />
       <BottomNav />

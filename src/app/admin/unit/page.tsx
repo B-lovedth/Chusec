@@ -6,9 +6,11 @@ import { Pagination } from "@/components/admin/Pagination";
 import { AgencyBadge } from "@/components/admin/IncidentDetailPanel";
 import { useApiList } from "@/hooks/useApiList";
 import { loadSecurityUnits } from "@/data/loaders";
+import { AddUnitModal } from "@/components/admin/AddUnitModal";
 import type { Agency } from "@/data/admin";
 
-const TOTAL_PAGES = 16;
+/** The units endpoint returns everything, so paging happens here. */
+const PAGE_SIZE = 10;
 
 const agencies: (Agency | "All")[] = [
   "All",
@@ -24,9 +26,10 @@ const agencies: (Agency | "All")[] = [
 export default function UnitPage() {
   const [query, setQuery] = useState("");
   const [agency, setAgency] = useState<Agency | "All">("All");
-  const [page, setPage] = useState(4);
+  const [page, setPage] = useState(1);
   const [expanded, setExpanded] = useState<string[]>([]);
-  const { status, items: securityUnits, error } = useApiList(loadSecurityUnits);
+  const { status, items: securityUnits, error, reload } = useApiList(loadSecurityUnits);
+  const [isAdding, setIsAdding] = useState(false);
 
   const visible = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -38,6 +41,12 @@ export default function UnitPage() {
       return matchesQuery && matchesAgency;
     });
   }, [query, agency, securityUnits]);
+
+  const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
+  // Clamped rather than reset in an effect, so filtering down never strands
+  // the user on a page that no longer exists.
+  const safePage = Math.min(page, totalPages);
+  const pageItems = visible.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const toggle = (id: string) => {
     setExpanded((current) =>
@@ -81,7 +90,7 @@ export default function UnitPage() {
               </select>
             </label>
 
-            <button type="button" className="table-add">
+            <button type="button" className="table-add" onClick={() => setIsAdding(true)}>
               <Plus size={16} strokeWidth={2.2} />
               Add Unit
             </button>
@@ -105,7 +114,7 @@ export default function UnitPage() {
               </thead>
 
               <tbody>
-                {visible.map((unit) => {
+                {pageItems.map((unit) => {
                   const isOpen = expanded.includes(unit.id);
 
                   return (
@@ -195,7 +204,7 @@ export default function UnitPage() {
                   );
                 })}
 
-                {visible.length === 0 && (
+                {pageItems.length === 0 && (
                   <tr>
                     <td colSpan={8} style={{ padding: 32, textAlign: "center", color: "#9aa0a6" }}>
                       {status === "loading"
@@ -211,8 +220,10 @@ export default function UnitPage() {
           </div>
         </div>
 
-        <Pagination page={page} totalPages={TOTAL_PAGES} onPageChange={setPage} />
+        <Pagination page={safePage} totalPages={totalPages} onPageChange={setPage} />
       </section>
+
+      {isAdding && <AddUnitModal onClose={() => setIsAdding(false)} onCreated={reload} />}
     </main>
   );
 }

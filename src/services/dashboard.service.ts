@@ -3,6 +3,7 @@ import type {
   AnalyticsResponse,
   CitizenDashboardResponse,
   CreateMemberRequest,
+  CreateUnitRequest,
   DashboardStats,
   MemberResponse,
   SystemStatus,
@@ -37,6 +38,14 @@ export async function getFieldUnits(): Promise<UnitResponse[]> {
 /* ------------------------------------------------------------------ *
  * Members — backs the User Access screen
  * ------------------------------------------------------------------ */
+
+export async function createFieldUnit(payload: CreateUnitRequest): Promise<UnitResponse> {
+  return apiRequest<UnitResponse>("/api/dashboard/units", { method: "POST", body: payload });
+}
+
+export async function deleteFieldUnit(unitId: number): Promise<unknown> {
+  return apiRequest<unknown>(`/api/dashboard/units/${unitId}`, { method: "DELETE" });
+}
 
 export async function listMembers(): Promise<MemberResponse[]> {
   return apiRequest<MemberResponse[]>("/api/dashboard/members");

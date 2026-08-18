@@ -69,6 +69,42 @@
   margin: 0 26px;
 }
 
+.beacon-warning {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 20px 0;
+  padding: 14px 16px;
+  background: $critical-bg;
+  border: 1px solid #f6c9c5;
+  border-radius: $r-md;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: #b3261e;
+
+  svg {
+    flex: 0 0 auto;
+  }
+
+  span {
+    flex: 1 1 auto;
+  }
+
+  .btn {
+    flex: 0 0 auto;
+  }
+
+  @include respond-to(mobile) {
+    flex-wrap: wrap;
+    margin: 12px 12px 0;
+    font-size: 12.5px;
+
+    .btn {
+      width: 100%;
+    }
+  }
+}
+
 .settings-row {
   margin: 14px 20px 0;
   padding: 18px 22px;

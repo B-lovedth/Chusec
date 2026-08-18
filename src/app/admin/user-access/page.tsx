@@ -6,9 +6,11 @@ import { Pagination } from "@/components/admin/Pagination";
 import { useApiList } from "@/hooks/useApiList";
 import { loadMembers } from "@/data/loaders";
 import { deleteMember } from "@/services/dashboard.service";
+import { AddMemberModal } from "@/components/admin/AddMemberModal";
 import type { MemberStatus } from "@/data/admin";
 
-const TOTAL_PAGES = 16;
+/** The members endpoint returns everything, so paging happens here. */
+const PAGE_SIZE = 10;
 
 function initials(name: string) {
   return name
@@ -26,8 +28,9 @@ export default function UserAccessPage() {
   const [selected, setSelected] = useState<string[]>([]);
   const [removed, setRemoved] = useState<string[]>([]);
   const [actionError, setActionError] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
 
-  const { status: loadStatus, items: members, error: loadError } = useApiList(loadMembers);
+  const { status: loadStatus, items: members, error: loadError, reload } = useApiList(loadMembers);
 
   const handleDelete = async (id: string) => {
     setActionError("");
@@ -54,10 +57,16 @@ export default function UserAccessPage() {
     });
   }, [query, status, members, removed]);
 
-  const allChecked = visible.length > 0 && visible.every((member) => selected.includes(member.id));
+  const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
+  // Clamped rather than reset in an effect, so filtering down never strands
+  // the user on a page that no longer exists.
+  const safePage = Math.min(page, totalPages);
+  const pageItems = visible.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  const allChecked = pageItems.length > 0 && pageItems.every((member) => selected.includes(member.id));
 
   const toggleAll = () => {
-    setSelected(allChecked ? [] : visible.map((member) => member.id));
+    setSelected(allChecked ? [] : pageItems.map((member) => member.id));
   };
 
   const toggleOne = (id: string) => {
@@ -102,7 +111,7 @@ export default function UserAccessPage() {
               </select>
             </label>
 
-            <button type="button" className="table-add">
+            <button type="button" className="table-add" onClick={() => setIsAdding(true)}>
               <Plus size={16} strokeWidth={2.2} />
               Add New Members
             </button>
@@ -135,7 +144,7 @@ export default function UserAccessPage() {
               </thead>
 
               <tbody>
-                {visible.map((member) => (
+                {pageItems.map((member) => (
                   <tr key={member.id}>
                     <td>
                       <input
@@ -179,7 +188,7 @@ export default function UserAccessPage() {
                   </tr>
                 ))}
 
-                {visible.length === 0 && (
+                {pageItems.length === 0 && (
                   <tr>
                     <td colSpan={6} style={{ padding: 32, textAlign: "center", color: "#9aa0a6" }}>
                       {loadStatus === "loading"
@@ -195,8 +204,10 @@ export default function UserAccessPage() {
           </div>
         </div>
 
-        <Pagination page={page} totalPages={TOTAL_PAGES} onPageChange={setPage} />
+        <Pagination page={safePage} totalPages={totalPages} onPageChange={setPage} />
       </section>
+
+      {isAdding && <AddMemberModal onClose={() => setIsAdding(false)} onCreated={reload} />}
     </main>
   );
 }

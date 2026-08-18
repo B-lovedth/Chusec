@@ -184,6 +184,28 @@ export type MemberResponse = {
   created_at: string | null;
 };
 
+export type CreateUnitRequest = {
+  name: string;
+  callsign?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  /** Defaults to "Nigeria Police Force" server-side. */
+  agency?: string | null;
+  state?: string | null;
+  lga?: string | null;
+  address?: string | null;
+  notes?: string | null;
+  responding_unit?: string | null;
+  team_lead?: string | null;
+  /** Comma-separated on the wire. */
+  responders?: string | null;
+  vehicles?: string | null;
+  lat?: number | null;
+  lon?: number | null;
+  /** Omit to let the API generate one and email the credentials. */
+  password?: string | null;
+};
+
 export type CreateMemberRequest = {
   email: string;
   name?: string | null;

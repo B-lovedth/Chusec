@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export type ApiListState<T> = {
   status: "loading" | "ready" | "error";
   items: T[];
   error: string;
+  /** Re-fetches — used after a create or delete. */
+  reload: () => void;
 };
 
 /**
@@ -14,7 +16,14 @@ export type ApiListState<T> = {
  * does not re-run on every render.
  */
 export function useApiList<T>(load: () => Promise<T[]>): ApiListState<T> {
-  const [state, setState] = useState<ApiListState<T>>({ status: "loading", items: [], error: "" });
+  const [state, setState] = useState<Omit<ApiListState<T>, "reload">>({
+    status: "loading",
+    items: [],
+    error: "",
+  });
+  const [nonce, setNonce] = useState(0);
+
+  const reload = useCallback(() => setNonce((value) => value + 1), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -35,7 +44,7 @@ export function useApiList<T>(load: () => Promise<T[]>): ApiListState<T> {
     return () => {
       cancelled = true;
     };
-  }, [load]);
+  }, [load, nonce]);
 
-  return state;
+  return { ...state, reload };
 }

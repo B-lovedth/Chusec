@@ -3,6 +3,24 @@ export type Coordinates = {
   lon: number;
 };
 
+export type GeoPermission = "granted" | "denied" | "prompt" | "unsupported";
+
+/**
+ * Reads the permission state without prompting. Not every browser exposes the
+ * Permissions API for geolocation, hence the "unsupported" case — callers
+ * should fall back to simply requesting a fix.
+ */
+export async function getGeolocationPermission(): Promise<GeoPermission> {
+  if (typeof navigator === "undefined" || !navigator.permissions?.query) return "unsupported";
+
+  try {
+    const status = await navigator.permissions.query({ name: "geolocation" as PermissionName });
+    return status.state as GeoPermission;
+  } catch {
+    return "unsupported";
+  }
+}
+
 /** Resolves to null rather than throwing when permission is denied or absent. */
 export function getCurrentCoordinates(timeoutMs = 8000): Promise<Coordinates | null> {
   if (typeof navigator === "undefined" || !navigator.geolocation) return Promise.resolve(null);
