@@ -183,6 +183,36 @@
 }
 
 /* ------------------------------------------------------------------ *
+ * Mobile logout
+ * ------------------------------------------------------------------ */
+
+.logout-row {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 50px;
+  margin-top: 20px;
+  border: 1px solid $border;
+  border-radius: $r-pill;
+  background: $surface;
+  color: $critical;
+  font-size: 15px;
+  font-weight: 600;
+
+  &:hover {
+    background: $critical-bg;
+    border-color: #f6c9c5;
+  }
+
+  /* Desktop reaches Logout through the account dropdown instead. */
+  @include respond-to(mobile) {
+    display: flex;
+  }
+}
+
+/* ------------------------------------------------------------------ *
  * Toggle switch
  * ------------------------------------------------------------------ */
 

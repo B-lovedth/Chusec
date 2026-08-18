@@ -5,6 +5,7 @@ import { MapPin } from "lucide-react";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { DeleteAccountPanel } from "@/components/profile/DeleteAccountPanel";
 import { StealthBeacon } from "@/components/settings/StealthBeacon";
+import { LogoutRow } from "@/components/settings/LogoutRow";
 import { useCitizenData } from "@/components/citizen/CitizenDataProvider";
 
 type SettingsTab = "profile" | "beacon";
@@ -54,6 +55,9 @@ export default function SettingsPage() {
       ) : (
         <StealthBeacon beaconActive={beaconActive} onBeaconChange={setBeaconOverride} />
       )}
+
+      {/* Reachable from either tab — hidden on desktop, where the nav has it. */}
+      <LogoutRow />
     </main>
   );
 }
