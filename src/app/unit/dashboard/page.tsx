@@ -1,13 +1,15 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Camera, Upload } from "lucide-react";
 import { CommandMap } from "@/components/admin/CommandMap";
 import { IncidentQueue } from "@/components/admin/IncidentQueue";
 import { ResponseProgress, type UnitStatus } from "@/components/unit/ResponseProgress";
 import { ClearIncidentModal } from "@/components/unit/ClearIncidentModal";
-import { useApiList } from "@/hooks/useApiList";
-import { loadAssignedIncidents, loadSecurityUnits } from "@/data/loaders";
+import { getUnitDashboard } from "@/services/dashboard.service";
+import { toAssignedIncident, toOwnUnitMarker, toUnitStatus } from "@/lib/admin-mappers";
+import type { SecurityUnit } from "@/data/admin";
+import type { UnitAssignedIncidentResponse } from "@/services/types";
 import {
   clearIncident,
   requestBackup,
@@ -24,8 +26,14 @@ const nextStep: Record<UnitStatus, { label: string; status: UnitStatus; tone: st
   resolved: null,
 };
 
-function nowLabel() {
-  return new Date().toLocaleString("en-NG", {
+/** Renders a server timestamp for the progress stepper. */
+function formatStamp(iso: string | null | undefined) {
+  if (!iso) return undefined;
+
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return undefined;
+
+  return date.toLocaleString("en-NG", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -35,12 +43,44 @@ function nowLabel() {
 }
 
 export default function UnitDashboardPage() {
-  const { status, items: incidents, error } = useApiList(loadAssignedIncidents);
-  const { items: fieldUnits } = useApiList(loadSecurityUnits);
+  const [assigned, setAssigned] = useState<UnitAssignedIncidentResponse[]>([]);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [error, setError] = useState("");
+  const [nonce, setNonce] = useState(0);
+  const [portalTitle, setPortalTitle] = useState("Unit Portal");
+  const [fieldUnits, setFieldUnits] = useState<SecurityUnit[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getUnitDashboard()
+      .then((dashboard) => {
+        if (cancelled) return;
+        setAssigned([...dashboard.active_assigned_incidents, ...dashboard.resolved_incidents]);
+        // Titles the portal by the unit's own agency instead of hardcoding "Police".
+        setPortalTitle(dashboard.agency ? `${dashboard.agency} Portal` : "Unit Portal");
+
+        // Only this unit's own position — the full roster is admin-only.
+        const own = toOwnUnitMarker(dashboard);
+        setFieldUnits(own ? [own] : []);
+
+        setStatus("ready");
+      })
+      .catch((fetchError: unknown) => {
+        if (cancelled) return;
+        setError(fetchError instanceof Error ? fetchError.message : "Could not load your cases.");
+        setStatus("error");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [nonce]);
+
+  const reload = useCallback(() => setNonce((value) => value + 1), []);
+  const incidents = useMemo(() => assigned.map(toAssignedIncident), [assigned]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const [unitStatus, setUnitStatus] = useState<UnitStatus>("dispatched");
-  const [timestamps, setTimestamps] = useState<Partial<Record<UnitStatus, string>>>({});
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [actionError, setActionError] = useState("");
 
@@ -56,15 +96,28 @@ export default function UnitDashboardPage() {
 
   const select = useCallback((id: string) => {
     setSelectedId(id);
-    // Each case tracks its own progress; reset when switching.
-    setUnitStatus("dispatched");
-    setTimestamps({});
     setBackupRequested(false);
     setEvidenceName("");
     setActionError("");
   }, []);
 
   const selected = incidents.find((incident) => incident.id === selectedId) ?? incidents[0] ?? null;
+
+  /**
+   * Progress is read back off the incident record rather than tracked locally.
+   * The old local state reset to "Dispatched" on every selection and every
+   * refresh, so a unit already on scene looked like it had not moved.
+   */
+  const selectedRecord = assigned.find((record) => String(record.id) === selected?.id) ?? null;
+  const unitStatus = toUnitStatus(selectedRecord?.unit_status);
+
+  const timestamps: Partial<Record<UnitStatus, string>> = {
+    dispatched: formatStamp(selectedRecord?.created_at),
+    en_route: formatStamp(selectedRecord?.en_route_at),
+    on_scene: formatStamp(selectedRecord?.arrived_at),
+    resolved: formatStamp(selectedRecord?.resolved_at),
+  };
+
   const step = nextStep[unitStatus];
 
   const advance = async () => {
@@ -82,8 +135,7 @@ export default function UnitDashboardPage() {
 
     try {
       await updateUnitStatus(Number(selected.id), step.status);
-      setUnitStatus(step.status);
-      setTimestamps((current) => ({ ...current, [step.status]: nowLabel() }));
+      reload();
     } catch (advanceError) {
       setActionError(
         advanceError instanceof Error ? advanceError.message : "Could not update the response status.",
@@ -101,9 +153,8 @@ export default function UnitDashboardPage() {
 
     try {
       await clearIncident(Number(selected.id), report);
-      setUnitStatus("resolved");
-      setTimestamps((current) => ({ ...current, resolved: nowLabel() }));
       setIsClearing(false);
+      reload();
     } catch (error_) {
       setClearError(error_ instanceof Error ? error_.message : "Could not clear the incident.");
     } finally {
@@ -146,7 +197,7 @@ export default function UnitDashboardPage() {
 
   return (
     <main className="page-card page-card--no-tabbar">
-      <h1 className="command-title">Police Unit Portal · Delta State</h1>
+      <h1 className="command-title">{portalTitle} · Delta State</h1>
 
       <div className="command-grid">
         <IncidentQueue

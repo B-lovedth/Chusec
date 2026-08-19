@@ -4,8 +4,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Bell, ChevronDown, LogOut, User } from "lucide-react";
+import { ChevronDown, LogOut, User } from "lucide-react";
 import { useSession } from "@/components/auth/SessionProvider";
+import { NotificationBell } from "@/components/layout/NotificationBell";
 
 
 export type NavItem = {
@@ -90,10 +91,7 @@ export function Navbar({
           })}
         </nav>
 
-        <button type="button" className="topbar__bell" aria-label="Notifications">
-          <Bell size={20} strokeWidth={1.9} />
-          <span className="topbar__bell__dot" aria-hidden="true" />
-        </button>
+        <NotificationBell />
 
         <div className="topbar__account" ref={accountRef}>
           <button

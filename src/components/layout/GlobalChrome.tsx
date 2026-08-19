@@ -22,6 +22,7 @@ const commandNavItems: NavItem[] = [
 /** Responding units get a shorter nav — no Unit or User access. */
 const unitNavItems: NavItem[] = [
   { label: "Dashboard", href: "/unit/dashboard" },
+  { label: "Comms", href: "/unit/comms" },
   { label: "History", href: "/unit/history" },
   { label: "Profile", href: "/unit/profile" },
 ];

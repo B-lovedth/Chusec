@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { PageShell } from "@/components/layout/PageShell";
 import { MapCard } from "@/components/dashboard/MapCard";
 import { ActiveCorridorAlert } from "@/components/dashboard/ActiveCorridorAlert";
@@ -17,6 +18,7 @@ const EMPTY_CORRIDORS: never[] = [];
 export default function DashboardPage() {
   const user = useUser();
   const { data, status, error, city } = useCitizenData();
+  const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
 
   const incidents = (data?.nearby_incidents ?? []).map(toNearbyIncidentItem);
   const corridors = (data?.transit_corridors ?? []).map(toDashboardCorridor);
@@ -32,6 +34,8 @@ export default function DashboardPage() {
         userLocation={data?.lat != null && data?.lon != null ? { lat: data.lat, lon: data.lon } : null}
         incidents={data?.nearby_incidents ?? EMPTY_INCIDENTS}
         corridors={data?.transit_corridors ?? EMPTY_CORRIDORS}
+        selectedIncidentId={selectedIncidentId}
+        onSelectIncident={setSelectedIncidentId}
       />
 
       <ActiveCorridorAlert warning={data?.active_corridor_warning ?? null} />
@@ -47,7 +51,12 @@ export default function DashboardPage() {
             skeletonRows={3}
           >
             {incidents.map((incident) => (
-              <IncidentItem key={incident.id} incident={incident} />
+              <IncidentItem
+                key={incident.id}
+                incident={incident}
+                onSelect={setSelectedIncidentId}
+                isSelected={String(incident.id) === selectedIncidentId}
+              />
             ))}
           </ListState>
         </div>

@@ -7,6 +7,7 @@ import type {
   DashboardStats,
   MemberResponse,
   SystemStatus,
+  UnitDashboardResponse,
   UnitResponse,
 } from "./types";
 
@@ -17,6 +18,11 @@ import type {
  */
 export async function getCitizenDashboard(): Promise<CitizenDashboardResponse> {
   return apiRequest<CitizenDashboardResponse>("/api/dashboard/citizen");
+}
+
+/** One request for the whole unit portal, mirroring the citizen dashboard. */
+export async function getUnitDashboard(): Promise<UnitDashboardResponse> {
+  return apiRequest<UnitDashboardResponse>("/api/dashboard/unit");
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
