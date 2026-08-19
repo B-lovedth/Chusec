@@ -29,8 +29,32 @@ export type CommandIncident = {
   severity: Severity;
   reportedBy: string;
   narrative: string;
+  /** The reporter's own words, when they supplied any. */
+  description: string | null;
+  /** Null until command dispatches someone. */
+  assignedUnit: { id: string; callsign: string } | null;
+  /** Where the assigned unit is in its response. */
+  unitStatus: UnitProgress | null;
+  unitTimeline: { dispatched: string; enRoute: string; onScene: string; resolved: string };
+  isResolved: boolean;
+  clearanceNotes: string | null;
+  /** Filed by the responding unit on the clearance report. */
+  outcome: IncidentOutcome;
   evidence: { name: string; kind: string }[];
 };
+
+export type IncidentOutcome = {
+  victimsInjured: number;
+  victimsDead: number;
+  criminalsInjured: number;
+  criminalsDead: number;
+  criminalsArrested: number;
+  agentsInjured: number;
+  agentsDead: number;
+};
+
+/** Mirrors the unit portal's stepper, kept here so `data/` owns no UI import. */
+export type UnitProgress = "dispatched" | "en_route" | "on_scene" | "resolved";
 
 /* ------------------------------------------------------------------ *
  * Nearest forces

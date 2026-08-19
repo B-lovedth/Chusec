@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { CommandMap } from "@/components/admin/CommandMap";
+import { IncidentOutcomeSummary } from "@/components/admin/IncidentOutcomeSummary";
 import { ListState } from "@/components/ui/ListState";
 import { useApiList } from "@/hooks/useApiList";
 import { loadIncidentHistory } from "@/data/loaders";
@@ -96,19 +97,65 @@ export default function CommandHistoryPage() {
               </div>
 
               <p className="detail-ref">
-                {selected.reference} · {selected.time}
+                {selected.reference} · {selected.date} · {selected.time}
               </p>
               <h2 className="detail-heading">{selected.title}</h2>
               <p className="detail-location">{selected.location}</p>
+
+              <p className="detail-section-label">
+                {selected.description ? "Description" : "Summary"}
+              </p>
               <p className="detail-narrative">{selected.narrative}</p>
 
+              <p className="detail-section-label">Response</p>
+              <dl className="detail-facts">
+                <div className="detail-facts__row">
+                  <dt>Responding unit</dt>
+                  <dd>
+                    {selected.assignedUnit ? (
+                      selected.assignedUnit.callsign
+                    ) : (
+                      <span className="detail-facts__muted">No unit recorded</span>
+                    )}
+                  </dd>
+                </div>
+                <div className="detail-facts__row">
+                  <dt>Reported</dt>
+                  <dd>{selected.unitTimeline.dispatched}</dd>
+                </div>
+                <div className="detail-facts__row">
+                  <dt>En route</dt>
+                  <dd>{selected.unitTimeline.enRoute}</dd>
+                </div>
+                <div className="detail-facts__row">
+                  <dt>On scene</dt>
+                  <dd>{selected.unitTimeline.onScene}</dd>
+                </div>
+                <div className="detail-facts__row">
+                  <dt>Resolved</dt>
+                  <dd>{selected.unitTimeline.resolved}</dd>
+                </div>
+              </dl>
+
+              <p className="detail-section-label">Casualty report</p>
+              <IncidentOutcomeSummary outcome={selected.outcome} />
+
+              <p className="detail-section-label">Clearance notes</p>
+              <p className="detail-narrative">
+                {selected.clearanceNotes ?? (
+                  <span className="detail-facts__muted">
+                    The responding unit filed no notes.
+                  </span>
+                )}
+              </p>
+
               {/*
-                The design also shows the resolving force's call metadata,
-                conversation log and response timeline. The API exposes none of
-                those yet, so they are left out rather than faked.
+                The design also shows the resolving force's call recording and
+                conversation log. The API exposes neither, so they are left out
+                rather than faked.
               */}
               <p className="history-detail__note">
-                Call recording, conversation log and response timeline aren&apos;t exposed by the API yet.
+                Call recording and conversation log aren&apos;t exposed by the API yet.
               </p>
             </section>
           )}

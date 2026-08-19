@@ -25,6 +25,9 @@ export const metadata: Metadata = {
   description: "Community safety reporting platform for Nigerian transit corridors",
   applicationName: "Chusec",
   appleWebApp: { capable: true, title: "Chusec", statusBarStyle: "default" },
+  // iOS ignores the web manifest's icons entirely — without this, "Add to Home
+  // Screen" saves a screenshot of the page instead of the logo.
+  icons: { apple: "/icons/apple-touch-icon.png" },
   formatDetection: { telephone: false },
 };
 

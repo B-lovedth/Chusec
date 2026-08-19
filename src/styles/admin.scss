@@ -1461,3 +1461,240 @@
     }
   }
 }
+
+/* ------------------------------------------------------------------ *
+ * Incident detail — response facts
+ * ------------------------------------------------------------------ */
+
+.detail-facts {
+  display: grid;
+  gap: 1px;
+  margin-top: 8px;
+  background: $border-soft;
+  border: 1px solid $border-soft;
+  border-radius: $r-sm;
+  overflow: hidden;
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 12px;
+    background: $surface;
+
+    dt {
+      font-size: 12.5px;
+      color: $text-muted;
+    }
+
+    dd {
+      font-size: 13px;
+      font-weight: 600;
+      color: $text;
+      text-align: right;
+    }
+  }
+
+  &__muted {
+    font-weight: 400;
+    color: $text-muted;
+  }
+}
+
+.unit-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: $r-pill;
+  font-size: 11.5px;
+  font-weight: 600;
+  background: $panel;
+  color: $text-soft;
+
+  &--dispatched {
+    background: $blue-tint;
+    color: $blue-hover;
+  }
+
+  &--en_route {
+    background: #fff4e5;
+    color: #b45309;
+  }
+
+  &--on_scene {
+    background: #fef6d8;
+    color: #92700a;
+  }
+
+  &--resolved {
+    background: #e7f8ef;
+    color: #12813f;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Casualty report — shared by command history and the unit review modal
+ * ------------------------------------------------------------------ */
+
+.outcome-groups {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.outcome-group {
+  padding: 11px 13px;
+  border: 1px solid $border-soft;
+  border-left-width: 3px;
+  border-radius: $r-sm;
+  background: $surface;
+
+  &--victim {
+    border-left-color: $critical;
+  }
+
+  &--criminal {
+    border-left-color: #f7861b;
+  }
+
+  &--agency {
+    border-left-color: $blue;
+  }
+
+  &__label {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: $text-muted;
+  }
+
+  &__rows {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    margin-top: 7px;
+  }
+}
+
+.outcome-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+
+  dt {
+    font-size: 12.5px;
+    color: $text-soft;
+  }
+
+  dd {
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1;
+    color: $text;
+    font-variant-numeric: tabular-nums;
+
+    /* A non-zero death toll should not read like any other counter. */
+    &.is-grave {
+      color: $critical;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Backup requests — command's side of the flow
+ * ------------------------------------------------------------------ */
+
+.backup-request {
+  margin-top: 8px;
+  padding: 11px 13px;
+  border: 1px solid $border-soft;
+  border-radius: $r-sm;
+  background: $surface;
+
+  &.is-waiting {
+    border-color: $critical;
+    background: $critical-bg;
+  }
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__from {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: $text;
+  }
+
+  &__clock {
+    font-size: 14px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: $critical;
+  }
+
+  &__notes {
+    margin-top: 4px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: $text-soft;
+  }
+
+  &__action {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+
+    .control {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .btn {
+      flex: 0 0 auto;
+      height: 38px;
+      padding: 0 16px;
+    }
+  }
+
+  &__resolved {
+    margin-top: 5px;
+    font-size: 12.5px;
+    color: $text-muted;
+  }
+}
+
+.backup-request__action {
+  flex-wrap: wrap;
+}
+
+.backup-request__eta {
+  flex: 0 0 92px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  input {
+    width: 100%;
+    min-width: 0;
+    /* Steppers crowd a 92px control; the label carries the unit instead. */
+    appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      appearance: none;
+      margin: 0;
+    }
+  }
+}
+
+.backup-request__eta-suffix {
+  font-size: 12px;
+  color: $text-muted;
+}

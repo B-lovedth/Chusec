@@ -14,6 +14,8 @@ export type UserResponse = {
   avatar_url: string | null;
   lat: number | null;
   lon: number | null;
+  /** False until NIN and emergency contact are both on file. */
+  is_profile_complete: boolean;
 };
 
 export type TokenResponse = {
@@ -47,10 +49,30 @@ export type IncidentResponse = {
   y: number;
   location_name: string;
   severity: string;
+  description: string | null;
+  evidence_url: string | null;
+  trigger_source: string | null;
   report_count: number;
   is_sos: boolean;
   is_beacon: boolean;
+  resolved: boolean;
   successful: boolean;
+  /** Set once command dispatches a unit. */
+  assigned_unit_id: number | null;
+  assigned_unit_callsign: string | null;
+  /** "dispatched" | "en_route" | "on_scene" | "resolved". */
+  unit_status: string;
+  en_route_at: string | null;
+  arrived_at: string | null;
+  resolved_at: string | null;
+  victims_injured: number;
+  victims_dead: number;
+  criminals_injured: number;
+  criminals_dead: number;
+  criminals_arrested: number;
+  agents_injured: number;
+  agents_dead: number;
+  clearance_notes: string | null;
   lat: number | null;
   lon: number | null;
   time: string;
@@ -333,6 +355,30 @@ export type BackupRequestResponse = {
   backup_unit_id: number | null;
   backup_unit_callsign: string | null;
   dispatched_at: string | null;
+  /**
+   * Still not in the schema. Without it the travel and total clocks have no
+   * endpoint to stop at, so they fall back to "--:--" once status is
+   * "arrived" rather than counting forever.
+   */
+  arrived_at?: string | null;
+  status: string;
+  eta_minutes: number | null;
+  eta_formatted: string | null;
+  /** Server-computed once dispatched, so the settled value never drifts. */
+  response_time_seconds: number | null;
+  response_time_formatted: string;
+};
+
+export type BackupDispatchPayload = {
+  backup_unit_id?: number | null;
+  backup_unit_callsign?: string | null;
+  /** Defaults to 5 server-side. */
+  eta_minutes?: number | null;
+  notes?: string | null;
+};
+
+/** "pending" | "dispatched" | "arrived" | "cancelled". */
+export type BackupStatusUpdatePayload = {
   status: string;
 };
 

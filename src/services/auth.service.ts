@@ -1,4 +1,4 @@
-import { apiRequest } from "./api";
+import { ApiError, apiRequest } from "./api";
 import { setAccessToken } from "@/lib/session";
 import { isValidEmail } from "@/lib/validation";
 import type {
@@ -66,6 +66,20 @@ export async function verifyEmailToken(token: string): Promise<void> {
     params: { token },
     anonymous: true,
   });
+}
+
+/**
+ * Recognises a login rejected because the address is unverified, so the form
+ * can route to the "check your email" screen instead of showing a dead end.
+ * The API does not use a dedicated status code for this, so the message is
+ * what has to be matched — kept broad on purpose.
+ */
+export function isUnverifiedEmailError(error: unknown): boolean {
+  if (!(error instanceof ApiError)) return false;
+  if (error.status !== 400 && error.status !== 401 && error.status !== 403) return false;
+
+  const message = error.message.toLowerCase();
+  return message.includes("verif") && !message.includes("password");
 }
 
 export async function resendVerificationEmail(email: string): Promise<void> {

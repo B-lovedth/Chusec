@@ -598,3 +598,10 @@
   gap: 20px;
   text-align: left;
 }
+
+/* Shown on the verify screen only when no address is known. */
+.notice-card__field {
+  width: 100%;
+  margin-top: 4px;
+  text-align: left;
+}

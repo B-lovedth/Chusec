@@ -1,6 +1,8 @@
 import { apiRequest } from "./api";
 import type {
+  BackupDispatchPayload,
   BackupRequestResponse,
+  BackupStatusUpdatePayload,
   IncidentClearanceReport,
   IncidentResponse,
   ReportCreate,
@@ -88,6 +90,48 @@ export async function requestBackup(incidentId: number, notes?: string): Promise
     method: "POST",
     body: { notes: notes ?? null },
   });
+}
+
+/** Command answering a field unit's request by sending someone. */
+export async function dispatchBackupUnit(
+  incidentId: number,
+  requestId: number,
+  payload: BackupDispatchPayload,
+): Promise<BackupRequestResponse> {
+  return apiRequest<BackupRequestResponse>(
+    `/api/incidents/${incidentId}/backup-requests/${requestId}/dispatch`,
+    { method: "POST", body: payload },
+  );
+}
+
+/**
+ * Stands a request down.
+ *
+ * The API exposes two routes for this — this one and
+ * `POST /api/incidents/{id}/cancel-backup?request_id=…`. They appear to do the
+ * same thing; the path-parameter form is used here because it matches
+ * `dispatch` and `status`. Worth asking the backend to retire the other.
+ */
+export async function cancelBackupRequest(
+  incidentId: number,
+  requestId: number,
+): Promise<BackupRequestResponse> {
+  return apiRequest<BackupRequestResponse>(
+    `/api/incidents/${incidentId}/backup-requests/${requestId}/cancel`,
+    { method: "POST" },
+  );
+}
+
+/** Moves a request between pending / dispatched / arrived / cancelled. */
+export async function updateBackupStatus(
+  incidentId: number,
+  requestId: number,
+  status: string,
+): Promise<BackupRequestResponse> {
+  return apiRequest<BackupRequestResponse>(
+    `/api/incidents/${incidentId}/backup-requests/${requestId}/status`,
+    { method: "PATCH", body: { status } satisfies BackupStatusUpdatePayload },
+  );
 }
 
 export async function listBackupHistory(incidentId: number): Promise<BackupRequestResponse[]> {

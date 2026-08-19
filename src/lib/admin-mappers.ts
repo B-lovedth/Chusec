@@ -1,4 +1,10 @@
-import type { CommandIncident, CommandStat, SecurityUnit, Agency } from "@/data/admin";
+import type {
+  Agency,
+  CommandIncident,
+  CommandStat,
+  IncidentOutcome,
+  SecurityUnit,
+} from "@/data/admin";
 import type {
   DashboardStats,
   IncidentResponse,
@@ -97,12 +103,57 @@ export function toAssignedIncident(incident: UnitAssignedIncidentResponse): Comm
     severity,
     reportedBy: "Command dispatch",
     narrative: incident.description ?? `${incident.type} at ${incident.location_name}.`,
+    description: incident.description?.trim() || null,
+    // A unit reading its own queue is the assignee; the payload doesn't repeat it.
+    assignedUnit: null,
+    unitStatus: toUnitStatus(incident.unit_status),
+    unitTimeline: {
+      dispatched: formatMoment(incident.created_at),
+      enRoute: formatMoment(incident.en_route_at),
+      onScene: formatMoment(incident.arrived_at),
+      resolved: formatMoment(incident.resolved_at),
+    },
+    isResolved: Boolean(incident.resolved),
+    clearanceNotes: incident.clearance_notes?.trim() || null,
+    outcome: toOutcome(incident),
     evidence: [],
   };
 }
 
+/** Casualty counters, coerced so a missing field reads as zero, not NaN. */
+function toOutcome(incident: IncidentResponse | UnitAssignedIncidentResponse): IncidentOutcome {
+  const count = (value: number | null | undefined) =>
+    Number.isFinite(Number(value)) ? Number(value) : 0;
+
+  return {
+    victimsInjured: count(incident.victims_injured),
+    victimsDead: count(incident.victims_dead),
+    criminalsInjured: count(incident.criminals_injured),
+    criminalsDead: count(incident.criminals_dead),
+    criminalsArrested: count(incident.criminals_arrested),
+    agentsInjured: count(incident.agents_injured),
+    agentsDead: count(incident.agents_dead),
+  };
+}
+
+/** "Mar 4, 2026, 14:20" — or an em dash when the stage has not happened. */
+function formatMoment(iso: string | null | undefined) {
+  if (!iso) return "—";
+
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  return date.toLocaleString("en-NG", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export function toCommandIncident(incident: IncidentResponse): CommandIncident {
   const severity = toSeverity(incident.severity);
+  const assignedId = incident.assigned_unit_id;
 
   return {
     id: String(incident.id),
@@ -119,9 +170,33 @@ export function toCommandIncident(incident: IncidentResponse): CommandIncident {
         : null,
     severity,
     reportedBy: incident.is_sos ? "SOS beacon" : "Citizen report",
-    narrative: `${incident.type} reported at ${incident.location_name}. ${incident.report_count} report${
-      incident.report_count === 1 ? "" : "s"
-    } received.`,
+    // The reporter's own account is worth more than a generated sentence, so
+    // it wins when present; the summary is the fallback.
+    narrative:
+      incident.description?.trim() ||
+      `${incident.type} reported at ${incident.location_name}. ${incident.report_count} report${
+        incident.report_count === 1 ? "" : "s"
+      } received.`,
+    description: incident.description?.trim() || null,
+    assignedUnit:
+      assignedId !== null && assignedId !== undefined
+        ? {
+            id: String(assignedId),
+            callsign: incident.assigned_unit_callsign || `Unit ${assignedId}`,
+          }
+        : null,
+    // Only meaningful once someone is actually assigned.
+    unitStatus:
+      assignedId !== null && assignedId !== undefined ? toUnitStatus(incident.unit_status) : null,
+    unitTimeline: {
+      dispatched: formatMoment(incident.created_at),
+      enRoute: formatMoment(incident.en_route_at),
+      onScene: formatMoment(incident.arrived_at),
+      resolved: formatMoment(incident.resolved_at),
+    },
+    isResolved: Boolean(incident.resolved),
+    clearanceNotes: incident.clearance_notes?.trim() || null,
+    outcome: toOutcome(incident),
     evidence: [],
   };
 }

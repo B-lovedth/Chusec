@@ -8,6 +8,7 @@ import { SosLauncher } from "@/components/sos/SosLauncher";
 import { SessionProvider } from "@/components/auth/SessionProvider";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { DesktopOnly } from "@/components/layout/DesktopOnly";
+import { ProfileCompletionBanner } from "@/components/citizen/ProfileCompletionBanner";
 import { CitizenDataProvider } from "@/components/citizen/CitizenDataProvider";
 import { BeaconProvider } from "@/components/citizen/BeaconProvider";
 
@@ -58,6 +59,7 @@ function AppChrome({ children }: GlobalChromeProps) {
     <>
       <Navbar />
       <RouteGuard>
+        <ProfileCompletionBanner />
         <CitizenDataProvider>
           {/* Pings run app-wide, not just on the Settings screen. */}
           <BeaconProvider>{children}</BeaconProvider>

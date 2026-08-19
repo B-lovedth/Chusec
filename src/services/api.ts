@@ -1,4 +1,5 @@
 import { clearAccessToken, getAccessToken } from "@/lib/session";
+import { syncServerClock } from "@/lib/server-clock";
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://chusec.onrender.com";
 
@@ -83,6 +84,10 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
     headers: requestHeaders,
     body: isFormData ? (body as FormData) : body !== undefined ? JSON.stringify(body) : undefined,
   });
+
+  // Every response carries the server's clock; elapsed-time displays are
+  // measured against it rather than the device's, which can be wrong.
+  syncServerClock(response.headers.get("Date"));
 
   const payload = await response.json().catch(() => null);
 

@@ -8,8 +8,14 @@ import { AuthBrand } from "@/components/auth/AuthBrand";
 import { BackButton } from "@/components/auth/BackButton";
 import { TextField } from "@/components/ui/TextField";
 import { useSession } from "@/components/auth/SessionProvider";
-import { getCurrentUser, loginUser } from "@/services/auth.service";
+import {
+  getCurrentUser,
+  isUnverifiedEmailError,
+  loginUser,
+  resendVerificationEmail,
+} from "@/services/auth.service";
 import { isValidEmail, isValidNigerianPhone } from "@/lib/validation";
+import { setPendingVerificationEmail } from "@/lib/pending-verification";
 import { areaForPath, areaForRole, areaHome } from "@/lib/roles";
 
 type Errors = Partial<Record<"identifier" | "password", string>>;
@@ -64,6 +70,25 @@ export function LoginForm() {
       signIn(profile);
       router.replace(target);
     } catch (error) {
+      // An unverified address is not a failed login — send them to finish
+      // verifying rather than leaving them guessing at the password.
+      if (isUnverifiedEmailError(error)) {
+        const identifier = form.identifier.trim();
+        // Resending needs the address; a phone login gives us nothing to send
+        // to, so the notice screen asks for one instead.
+        const email = isValidEmail(identifier) ? identifier : "";
+
+        setPendingVerificationEmail(email);
+        if (email) {
+          // Fire and forget — the screen offers a manual resend either way.
+          resendVerificationEmail(email).catch(() => {});
+        }
+
+        // Same screen signup uses; it reads the stored address and can resend.
+        router.replace("/auth/verify-email");
+        return;
+      }
+
       setFormError(error instanceof Error ? error.message : "Could not sign you in. Try again.");
       setIsSubmitting(false);
     }

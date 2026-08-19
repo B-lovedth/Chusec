@@ -80,7 +80,9 @@ export function SignupForm() {
 
       const verificationEmail = user.email ?? form.email;
       setPendingVerificationEmail(verificationEmail);
-      router.push(`/auth/verify-email?email=${encodeURIComponent(verificationEmail)}`);
+      // The address travels in storage, not the URL — a query param would leak
+      // it into history, referrers and any logs on the way.
+      router.push("/auth/verify-email");
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "Could not create your account. Try again.");
       setIsSubmitting(false);

@@ -6,13 +6,13 @@ import { CommandMap } from "@/components/admin/CommandMap";
 import { IncidentQueue } from "@/components/admin/IncidentQueue";
 import { ResponseProgress, type UnitStatus } from "@/components/unit/ResponseProgress";
 import { ClearIncidentModal } from "@/components/unit/ClearIncidentModal";
+import { BackupPanel } from "@/components/unit/BackupPanel";
 import { getUnitDashboard } from "@/services/dashboard.service";
 import { toAssignedIncident, toOwnUnitMarker, toUnitStatus } from "@/lib/admin-mappers";
 import type { SecurityUnit } from "@/data/admin";
 import type { UnitAssignedIncidentResponse } from "@/services/types";
 import {
   clearIncident,
-  requestBackup,
   updateUnitStatus,
   uploadEvidence,
 } from "@/services/incidents.service";
@@ -87,16 +87,12 @@ export default function UnitDashboardPage() {
   const [evidenceName, setEvidenceName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [backupRequested, setBackupRequested] = useState(false);
-  const [isRequestingBackup, setIsRequestingBackup] = useState(false);
-
   const [isClearing, setIsClearing] = useState(false);
   const [clearError, setClearError] = useState("");
   const [isSubmittingClearance, setIsSubmittingClearance] = useState(false);
 
   const select = useCallback((id: string) => {
     setSelectedId(id);
-    setBackupRequested(false);
     setEvidenceName("");
     setActionError("");
   }, []);
@@ -159,24 +155,6 @@ export default function UnitDashboardPage() {
       setClearError(error_ instanceof Error ? error_.message : "Could not clear the incident.");
     } finally {
       setIsSubmittingClearance(false);
-    }
-  };
-
-  const handleBackup = async () => {
-    if (!selected) return;
-
-    setActionError("");
-    setIsRequestingBackup(true);
-
-    try {
-      await requestBackup(Number(selected.id));
-      setBackupRequested(true);
-    } catch (backupError) {
-      setActionError(
-        backupError instanceof Error ? backupError.message : "Could not request backup.",
-      );
-    } finally {
-      setIsRequestingBackup(false);
     }
   };
 
@@ -290,24 +268,10 @@ export default function UnitDashboardPage() {
                 </p>
               </div>
 
-              <div className="backup-panel">
-                <h3 className="backup-panel__title">Standard Backup Request</h3>
-                <p className="backup-panel__text">
-                  Notifies command to dispatch nearby units visible on the radar.
-                </p>
-                <button
-                  type="button"
-                  className="backup-panel__button"
-                  onClick={handleBackup}
-                  disabled={isRequestingBackup || backupRequested}
-                >
-                  {backupRequested
-                    ? "Backup Requested"
-                    : isRequestingBackup
-                      ? "Requesting..."
-                      : "Request Backup"}
-                </button>
-              </div>
+              {/* Nothing to reinforce once the case is closed. */}
+              {!selected.isResolved && unitStatus !== "resolved" && (
+                <BackupPanel incidentId={Number(selected.id)} key={selected.id} />
+              )}
             </>
           ) : (
             <div className="detail-body">

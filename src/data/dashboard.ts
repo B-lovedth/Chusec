@@ -9,6 +9,8 @@ export type UserProfile = {
   nin: string;
   location: string;
   avatar: string;
+  /** False until NIN and emergency contact are both on file. */
+  isProfileComplete: boolean;
 };
 
 export type IncidentItem = {
@@ -42,6 +44,8 @@ export const profileDefaults: UserProfile = {
   nin: "12345678901",
   location: "",
   avatar: "/avatar-placeholder.svg",
+  // Defaults must never trigger the "finish your profile" prompt on their own.
+  isProfileComplete: true,
 };
 
 

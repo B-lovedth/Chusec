@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, ChevronDown, ChevronUp, Download, Eye, Film, ShieldCheck, UserRound } from "lucide-react";
 import { SeverityBadge } from "@/components/ui/SeverityBadge";
 import { ListState } from "@/components/ui/ListState";
+import { BackupRequests } from "@/components/admin/BackupRequests";
 import { useApiList } from "@/hooks/useApiList";
 import { loadSecurityUnits } from "@/data/loaders";
 import {
@@ -12,10 +13,17 @@ import {
   resolveIncident,
   updateIncidentSeverity,
 } from "@/services/incidents.service";
-import type { Agency, CommandIncident } from "@/data/admin";
+import type { Agency, CommandIncident, UnitProgress } from "@/data/admin";
 import type { Severity } from "@/data/dashboard";
 
 const statuses: Severity[] = ["Critical", "Medium", "High", "Low"];
+
+const UNIT_STATUS_LABELS: Record<UnitProgress, string> = {
+  dispatched: "Dispatched",
+  en_route: "En route",
+  on_scene: "On scene",
+  resolved: "Resolved",
+};
 
 const agencyModifier: Record<Agency, string> = {
   "Nigeria Police Force": "police",
@@ -54,7 +62,14 @@ export function IncidentDetailPanel({ incident, onResolved }: IncidentDetailPane
 
   const { status: unitsStatus, items: units, error: unitsError } = useApiList(loadSecurityUnits);
 
-  const [dispatched, setDispatched] = useState<string[]>([]);
+  /**
+   * Seeded from the server so an incident that already has a unit stays
+   * resolvable after a refresh — this used to be local-only, which meant
+   * reloading the page locked the Resolve button again.
+   */
+  const [dispatched, setDispatched] = useState<string[]>(() =>
+    incident.assignedUnit ? [incident.assignedUnit.id] : [],
+  );
   const [pendingUnit, setPendingUnit] = useState<string | null>(null);
   const [actionError, setActionError] = useState("");
   const [isResolving, setIsResolving] = useState(false);
@@ -171,7 +186,63 @@ export function IncidentDetailPanel({ incident, onResolved }: IncidentDetailPane
             </p>
             <h2 className="detail-heading">{incident.title}</h2>
             <p className="detail-location">{incident.location}</p>
+
+            <p className="detail-section-label">
+              {incident.description ? "Description" : "Summary"}
+            </p>
             <p className="detail-narrative">{incident.narrative}</p>
+
+            <p className="detail-section-label">Response</p>
+            <dl className="detail-facts">
+              <div className="detail-facts__row">
+                <dt>Assigned unit</dt>
+                <dd>
+                  {incident.assignedUnit ? (
+                    incident.assignedUnit.callsign
+                  ) : (
+                    <span className="detail-facts__muted">No unit dispatched</span>
+                  )}
+                </dd>
+              </div>
+
+              <div className="detail-facts__row">
+                <dt>Unit status</dt>
+                <dd>
+                  {incident.unitStatus ? (
+                    <span className={`unit-status-pill unit-status-pill--${incident.unitStatus}`}>
+                      {UNIT_STATUS_LABELS[incident.unitStatus]}
+                    </span>
+                  ) : (
+                    <span className="detail-facts__muted">Awaiting dispatch</span>
+                  )}
+                </dd>
+              </div>
+
+              {/* Only the stages that have actually happened carry a time. */}
+              <div className="detail-facts__row">
+                <dt>Reported</dt>
+                <dd>{incident.unitTimeline.dispatched}</dd>
+              </div>
+              <div className="detail-facts__row">
+                <dt>En route</dt>
+                <dd>{incident.unitTimeline.enRoute}</dd>
+              </div>
+              <div className="detail-facts__row">
+                <dt>On scene</dt>
+                <dd>{incident.unitTimeline.onScene}</dd>
+              </div>
+              <div className="detail-facts__row">
+                <dt>Resolved</dt>
+                <dd>{incident.unitTimeline.resolved}</dd>
+              </div>
+            </dl>
+
+            {incident.clearanceNotes && (
+              <>
+                <p className="detail-section-label">Clearance notes</p>
+                <p className="detail-narrative">{incident.clearanceNotes}</p>
+              </>
+            )}
 
             {incident.evidence.length > 0 && (
               <>
@@ -252,6 +323,8 @@ export function IncidentDetailPanel({ incident, onResolved }: IncidentDetailPane
               {isResolving ? "Resolving..." : "Resolved"}
             </button>
           </div>
+
+          <BackupRequests incidentId={incidentId} units={units} />
 
           <div className="detail-body">
             <p className="forces-label">Nearest Forces</p>

@@ -5,8 +5,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { MailCheck, TriangleAlert } from "lucide-react";
 import { resendVerificationEmail, verifyEmailToken } from "@/services/auth.service";
-import { getPendingVerificationEmail } from "@/lib/pending-verification";
+import {
+  getPendingVerificationEmail,
+  setPendingVerificationEmail,
+} from "@/lib/pending-verification";
 import { useClientSnapshot } from "@/hooks/useClientSnapshot";
+import { isValidEmail } from "@/lib/validation";
+import { TextField } from "@/components/ui/TextField";
 
 const RESEND_COOLDOWN_SECONDS = 45;
 
@@ -15,7 +20,12 @@ export function VerifyEmailNotice() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
   const storedEmail = useClientSnapshot(getPendingVerificationEmail, "");
-  const email = searchParams.get("email") ?? storedEmail;
+
+  // Typed in when we have no address on file — reached by signing in with a
+  // phone number, or by opening the link in a different browser.
+  const [typedEmail, setTypedEmail] = useState("");
+  const email = storedEmail;
+  const target = email || typedEmail.trim();
 
   const [failure, setFailure] = useState("");
   const [cooldown, setCooldown] = useState(0);
@@ -56,13 +66,19 @@ export function VerifyEmailNotice() {
   }, [cooldown]);
 
   const handleResend = async () => {
-    if (cooldown > 0 || !email || isResending) return;
+    if (cooldown > 0 || isResending) return;
+
+    if (!isValidEmail(target)) {
+      setNotice("Enter the email address you signed up with.");
+      return;
+    }
 
     setNotice("");
     setIsResending(true);
 
     try {
-      await resendVerificationEmail(email);
+      await resendVerificationEmail(target);
+      setPendingVerificationEmail(target);
       setCooldown(RESEND_COOLDOWN_SECONDS);
       setNotice("Verification link sent again.");
     } catch (error) {
@@ -106,6 +122,22 @@ export function VerifyEmailNotice() {
         )}
       </p>
 
+      {/* No address on file to resend to — ask for one rather than
+          dead-ending the button. */}
+      {!email && (
+        <div className="notice-card__field">
+          <TextField
+            label="Email address"
+            name="email"
+            type="email"
+            value={typedEmail}
+            onChange={(event) => setTypedEmail(event.target.value)}
+            placeholder="chidiokafor@gmail.com"
+            autoComplete="email"
+          />
+        </div>
+      )}
+
       <div className="notice-card__actions">
         <Link href="/auth/login" className="btn btn--primary">
           Continue to sign in
@@ -114,7 +146,7 @@ export function VerifyEmailNotice() {
 
       <p className="notice-card__hint">
         {failure ? "Need a new link?" : "Didn’t get it?"}{" "}
-        <button type="button" onClick={handleResend} disabled={cooldown > 0 || isResending || !email}>
+        <button type="button" onClick={handleResend} disabled={cooldown > 0 || isResending}>
           {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend link"}
         </button>
       </p>

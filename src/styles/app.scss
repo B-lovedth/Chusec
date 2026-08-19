@@ -847,3 +847,69 @@
     background: $low;
   }
 }
+
+/* ------------------------------------------------------------------ *
+ * Profile completion prompt
+ * ------------------------------------------------------------------ */
+
+.profile-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: $app-max-width;
+  margin: 0 auto 20px;
+  padding: 12px 16px;
+  background: #fff8e6;
+  border: 1px solid #f5d98a;
+  border-radius: $r-sm;
+
+  /* Sits inside the shell gutter so it lines up with the page card. */
+  width: calc(100% - #{$shell-gutter} * 2);
+
+  &__icon {
+    @include flex-center;
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #fdefc8;
+    color: #92700a;
+  }
+
+  &__text {
+    flex: 1 1 auto;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: #6b5308;
+  }
+
+  &__action {
+    flex: 0 0 auto;
+    padding: 8px 14px;
+    border-radius: $r-pill;
+    background: $blue;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+
+    &:hover {
+      background: $blue-hover;
+    }
+  }
+
+  @include respond-to(mobile) {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+
+    &__text {
+      font-size: 13px;
+    }
+
+    &__action {
+      width: 100%;
+      text-align: center;
+    }
+  }
+}

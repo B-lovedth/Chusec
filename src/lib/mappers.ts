@@ -56,12 +56,6 @@ export type CorridorLine = {
   name: string;
 };
 
-/**
- * Waypoints arrive either as named objects or as bare pairs. A bare pair is
- * `[lon, lat]` — GeoJSON order, confirmed with the backend. The order cannot
- * be inferred from the values themselves, because Delta State's latitude and
- * longitude ranges overlap, so this stays an agreement rather than a check.
- */
 /** Coordinates have arrived as numeric strings before — coerce, then verify. */
 function toNumber(value: unknown): number | null {
   if (value === null || value === undefined || value === "") return null;
@@ -69,6 +63,12 @@ function toNumber(value: unknown): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+/**
+ * Waypoints arrive either as named objects or as bare pairs. A bare pair is
+ * `[lon, lat]` — GeoJSON order, confirmed with the backend. The order cannot
+ * be inferred from the values themselves, because Delta State's latitude and
+ * longitude ranges overlap, so this stays an agreement rather than a check.
+ */
 function toLngLat(point: CorridorWaypoint): [number, number] | null {
   if (Array.isArray(point)) {
     const lon = toNumber(point[0]);
@@ -166,5 +166,6 @@ export function toUserProfile(user: UserResponse): UserProfile {
     // Resolved per-request by the citizen dashboard, not stored on the user.
     location: "",
     avatar: toAvatarUrl(user.avatar_url),
+    isProfileComplete: user.is_profile_complete ?? true,
   };
 }
