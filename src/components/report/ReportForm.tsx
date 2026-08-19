@@ -54,25 +54,25 @@ export function ReportForm({ isAnonymous, onAnonymousChange }: ReportFormProps) 
       const coordinates = await getCurrentCoordinates();
       const point = toApiPoint(coordinates);
 
-      // The API has no location field, so the typed location rides in the note.
       // Severity is deliberately absent — the command centre grades incidents.
-      const note = [description.trim(), location.trim() ? `Location: ${location.trim()}` : ""]
-        .filter(Boolean)
-        .join("\n");
-
       const report = await submitReport({
         incident_type: incidentType,
-        note,
+        note: description.trim() || null,
+        lat: point.lat,
+        lon: point.lon,
         x: point.x,
         y: point.y,
+        location_name: location.trim() || null,
+        is_anonymous: anonymous,
       });
 
-      // Evidence upload needs a session, so it is skipped for anonymous reports.
-      if (evidence && !anonymous && isAuthenticated()) {
+      // The reports endpoint needs a session either way, so evidence attaches
+      // to an anonymous report too — the flag hides the reporter, not the file.
+      if (evidence && isAuthenticated()) {
         await uploadEvidence(evidence, String(report.id));
       }
 
-      const skippedEvidence = evidence && (anonymous || !isAuthenticated());
+      const skippedEvidence = evidence && !isAuthenticated();
       setStatus({
         type: "success",
         message: skippedEvidence
@@ -81,6 +81,7 @@ export function ReportForm({ isAnonymous, onAnonymousChange }: ReportFormProps) 
       });
 
       setDescription("");
+      setLocation("");
       selectEvidence(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (error) {

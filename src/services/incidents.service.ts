@@ -15,12 +15,17 @@ export async function getIncident(id: number): Promise<IncidentResponse> {
   return apiRequest<IncidentResponse>(`/api/incidents/${id}`);
 }
 
-/** Public endpoint — this is what the Report screen posts to. */
+/**
+ * This is what the Report screen posts to. It requires a bearer token — the
+ * endpoint used to be public, and sending it unauthenticated is what left
+ * `user_id` null and `is_anonymous` stuck at its `true` default. Anonymity is
+ * expressed by the `is_anonymous` flag in the body, not by withholding the
+ * token.
+ */
 export async function submitReport(payload: ReportCreate): Promise<ReportResponse> {
   return apiRequest<ReportResponse>("/api/reports", {
     method: "POST",
     body: payload,
-    anonymous: true,
   });
 }
 
