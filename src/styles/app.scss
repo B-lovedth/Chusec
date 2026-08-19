@@ -168,6 +168,17 @@
   }
 }
 
+.topbar__notifications {
+  position: relative;
+  flex: 0 0 auto;
+
+  /* Same trick as `.topbar__account`: anchor the panel to the bar, not to the
+     55px button, so it can't hang off the left edge on a narrow screen. */
+  @include respond-to(mobile) {
+    position: static;
+  }
+}
+
 .topbar__bell {
   position: relative;
   @include flex-center;
@@ -179,24 +190,131 @@
   color: $text;
   box-shadow: $shadow-card;
 
-  &__dot {
+  /* Only rendered when something is actually unread. */
+  &__count {
     position: absolute;
-    top: 16px;
-    right: 17px;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
+    top: 11px;
+    right: 11px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    @include flex-center;
+    border-radius: $r-pill;
     background: $critical;
     border: 1.5px solid $surface;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    color: #fff;
   }
 
   @include respond-to(mobile) {
     width: 46px;
     height: 46px;
 
-    &__dot {
-      top: 12px;
-      right: 13px;
+    &__count {
+      top: 6px;
+      right: 6px;
+    }
+  }
+}
+
+.notification-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 45;
+  width: 340px;
+  max-width: calc(100vw - 28px);
+  background: $surface;
+  border: 1px solid $border-soft;
+  border-radius: $r-md;
+  box-shadow: 0 12px 30px rgba(16, 24, 40, 0.14);
+  overflow: hidden;
+  animation: topbar-menu-in 0.14s ease both;
+
+  @include respond-to(mobile) {
+    right: 14px;
+    left: auto;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 13px 15px;
+    border-bottom: 1px solid $border-soft;
+
+    h2 {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: $text;
+    }
+
+    button {
+      font-size: 12.5px;
+      color: $blue;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  &__list {
+    max-height: 360px;
+    overflow-y: auto;
+  }
+
+  &__empty {
+    padding: 26px 15px;
+    text-align: center;
+    font-size: 13.5px;
+    color: $text-muted;
+  }
+}
+
+.notification-item {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid $border-soft;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: $panel;
+  }
+
+  &__title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: $text;
+  }
+
+  &__message {
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: $text-muted;
+  }
+
+  &__time {
+    font-size: 11.5px;
+    color: $text-muted;
+  }
+
+  /* Unread rows carry a colour rail so the count on the bell is explainable. */
+  &.is-unread {
+    background: rgba($blue, 0.05);
+    box-shadow: inset 3px 0 0 $blue;
+
+    .notification-item__title {
+      color: $blue-hover;
     }
   }
 }
@@ -543,6 +661,23 @@
 
   & + & {
     border-top: 1px solid $border-soft;
+  }
+
+  /* Rows that pan the map are buttons, so they need the affordance. */
+  &--action {
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+
+    &:hover {
+      background: $panel;
+    }
+
+    &.is-selected {
+      background: $blue-tint;
+      box-shadow: inset 3px 0 0 $blue;
+    }
   }
 
   &__lead {

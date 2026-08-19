@@ -19,9 +19,18 @@ type MapCardProps = {
   userLocation: { lat: number; lon: number } | null;
   incidents: NearbyIncidentResponse[];
   corridors?: TransitCorridorResponse[];
+  /** Pans the map to this incident; set by the Nearby Incidents list. */
+  selectedIncidentId?: string | null;
+  onSelectIncident?: (id: string) => void;
 };
 
-export function MapCard({ userLocation, incidents, corridors = [] }: MapCardProps) {
+export function MapCard({
+  userLocation,
+  incidents,
+  corridors = [],
+  selectedIncidentId = null,
+  onSelectIncident,
+}: MapCardProps) {
   // Only corridors the backend has given geometry for produce a line.
   const lines = useMemo(
     () => corridors.map(toCorridorLine).filter((line): line is NonNullable<typeof line> => line !== null),
@@ -37,6 +46,7 @@ export function MapCard({ userLocation, incidents, corridors = [] }: MapCardProp
         lat: incident.lat,
         lon: incident.lon,
         color: markerColor[severity] ?? "#ef4136",
+        selected: String(incident.id) === selectedIncidentId,
         label: `${incident.type} — ${incident.distance_formatted} ${incident.cardinal_direction}`,
         tooltip: {
           badge: severity,
@@ -65,14 +75,21 @@ export function MapCard({ userLocation, incidents, corridors = [] }: MapCardProp
       },
       ...incidentMarkers,
     ];
-  }, [incidents, userLocation]);
+  }, [incidents, userLocation, selectedIncidentId]);
 
   return (
     <div className="map-card">
       {MAPBOX_TOKEN ? (
-        // Centred on the citizen rather than fitted to every marker — at
-        // zoom 13 the view spans roughly 5 km, so nearby incidents still show.
-        <MapboxMap markers={markers} lines={lines} focus={userLocation} focusZoom={17} />
+        // Centred on the citizen rather than fitted to every marker. 17 is the
+        // *tightest* the view goes — it widens to hold any corridor geometry,
+        // since at street level the lines would all be off-screen.
+        <MapboxMap
+          markers={markers}
+          lines={lines}
+          focus={userLocation}
+          focusZoom={17}
+          onSelect={onSelectIncident}
+        />
       ) : (
         <>
           <MapCanvas />

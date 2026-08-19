@@ -94,6 +94,8 @@ type MapboxMapProps = {
   /** Centres on a fixed point instead of fitting bounds — the citizen's own position. */
   focus?: { lat: number; lon: number } | null;
   focusZoom?: number;
+  /** Closest the camera goes when panning to a newly selected marker. */
+  selectZoom?: number;
   className?: string;
 };
 
@@ -104,6 +106,7 @@ export function MapboxMap({
   fitToMarkers = true,
   focus = null,
   focusZoom = 13,
+  selectZoom = 14,
   className = "mapbox-canvas",
 }: MapboxMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -111,6 +114,9 @@ export function MapboxMap({
   const markerRefs = useRef<import("mapbox-gl").Marker[]>([]);
   const popupRefs = useRef<import("mapbox-gl").Popup[]>([]);
   const hasFocusedRef = useRef(false);
+  // `undefined` until the first pass, so a screen that opens with something
+  // already selected keeps its overview instead of snapping to that marker.
+  const lastSelectedRef = useRef<string | undefined>(undefined);
   const focusLat = focus?.lat ?? null;
   const focusLon = focus?.lon ?? null;
   // Held in a ref so marker click handlers always call the latest callback
@@ -287,10 +293,52 @@ export function MapboxMap({
         );
       });
 
+      // Picking something out of a list is an explicit request to look at it,
+      // so it outranks both the focus point and bounds-fitting.
+      const selected = markers.find((marker) => marker.selected);
+      const selectedKey = selected?.id ?? "";
+      const previousKey = lastSelectedRef.current;
+      lastSelectedRef.current = selectedKey;
+
+      if (selected && previousKey !== undefined) {
+        if (previousKey !== selectedKey) {
+          map.easeTo({
+            center: [selected.lon, selected.lat],
+            // Never zoom out to reach a marker — only in, and only if needed.
+            zoom: Math.max(map.getZoom(), selectZoom),
+            duration: 700,
+          });
+        }
+
+        // Selected or re-rendered, the camera belongs to the user's choice now.
+        // Re-framing on the next data refresh would drag it away mid-read.
+        return;
+      }
+
       // A focus point wins over bounds-fitting: the citizen map is about where
       // *you* are, not about framing every incident in the state.
       if (focusLat !== null && focusLon !== null) {
         const center: [number, number] = [focusLon, focusLat];
+
+        // Corridors are kilometres of highway; at `focusZoom` the view spans a
+        // few hundred metres, so a tight lock on the user puts every line
+        // off-screen. Widen just enough to hold them, never tighter than
+        // `focusZoom`. The Recentre button returns to the personal view.
+        const corridorPoints = lines.flatMap((line) => line.coordinates);
+
+        if (corridorPoints.length > 0) {
+          const bounds = new mapboxgl.LngLatBounds();
+          bounds.extend(center);
+          corridorPoints.forEach((point) => bounds.extend(point));
+
+          map.fitBounds(bounds, {
+            padding: 60,
+            maxZoom: focusZoom,
+            duration: hasFocusedRef.current ? 600 : 0,
+          });
+          hasFocusedRef.current = true;
+          return;
+        }
 
         if (hasFocusedRef.current) {
           map.easeTo({ center, zoom: focusZoom, duration: 600 });
@@ -320,7 +368,7 @@ export function MapboxMap({
     // Depends on the coordinates, not the object — callers routinely pass a
     // fresh `{lat, lon}` each render, which would otherwise rebuild every
     // marker and re-ease the camera on every tick.
-  }, [markers, fitToMarkers, focusLat, focusLon, focusZoom]);
+  }, [markers, lines, fitToMarkers, focusLat, focusLon, focusZoom, selectZoom]);
 
   const recentre = () => {
     if (focusLat === null || focusLon === null) return;

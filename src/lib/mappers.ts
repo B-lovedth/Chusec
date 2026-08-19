@@ -57,20 +57,28 @@ export type CorridorLine = {
 };
 
 /**
- * Waypoints arrive either as named objects or as bare pairs. Named keys are
- * unambiguous; a bare pair is assumed to be `[lon, lat]` (GeoJSON order),
- * which cannot be inferred from the values themselves because Delta State's
- * latitude and longitude ranges overlap.
+ * Waypoints arrive either as named objects or as bare pairs. A bare pair is
+ * `[lon, lat]` — GeoJSON order, confirmed with the backend. The order cannot
+ * be inferred from the values themselves, because Delta State's latitude and
+ * longitude ranges overlap, so this stays an agreement rather than a check.
  */
+/** Coordinates have arrived as numeric strings before — coerce, then verify. */
+function toNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const parsed = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 function toLngLat(point: CorridorWaypoint): [number, number] | null {
   if (Array.isArray(point)) {
-    const [a, b] = point;
-    return Number.isFinite(a) && Number.isFinite(b) ? [a, b] : null;
+    const lon = toNumber(point[0]);
+    const lat = toNumber(point[1]);
+    return lon !== null && lat !== null ? [lon, lat] : null;
   }
 
-  const lat = point.lat ?? point.latitude;
-  const lon = point.lon ?? point.lng ?? point.longitude;
-  return Number.isFinite(lat) && Number.isFinite(lon) ? [lon as number, lat as number] : null;
+  const lat = toNumber(point.lat ?? point.latitude);
+  const lon = toNumber(point.lon ?? point.lng ?? point.longitude);
+  return lat !== null && lon !== null ? [lon, lat] : null;
 }
 
 /**
@@ -80,18 +88,18 @@ function toLngLat(point: CorridorWaypoint): [number, number] | null {
 export function toCorridorLine(corridor: TransitCorridorResponse): CorridorLine | null {
   const coordinates: [number, number][] = [];
 
-  if (Number.isFinite(corridor.start_lat) && Number.isFinite(corridor.start_lon)) {
-    coordinates.push([corridor.start_lon as number, corridor.start_lat as number]);
-  }
+  const startLat = toNumber(corridor.start_lat);
+  const startLon = toNumber(corridor.start_lon);
+  if (startLat !== null && startLon !== null) coordinates.push([startLon, startLat]);
 
   (corridor.waypoints ?? []).forEach((point) => {
     const pair = toLngLat(point);
     if (pair) coordinates.push(pair);
   });
 
-  if (Number.isFinite(corridor.end_lat) && Number.isFinite(corridor.end_lon)) {
-    coordinates.push([corridor.end_lon as number, corridor.end_lat as number]);
-  }
+  const endLat = toNumber(corridor.end_lat);
+  const endLon = toNumber(corridor.end_lon);
+  if (endLat !== null && endLon !== null) coordinates.push([endLon, endLat]);
 
   // A line needs two distinct ends.
   if (coordinates.length < 2) return null;
@@ -99,9 +107,24 @@ export function toCorridorLine(corridor: TransitCorridorResponse): CorridorLine 
   return {
     id: String(corridor.id),
     coordinates,
-    color: corridor.color || SEVERITY_COLOR[toSeverity(corridor.severity || corridor.risk_level)],
+    color: toLineColor(corridor.color, corridor.severity || corridor.risk_level),
     name: formatCorridorName(corridor.name),
   };
+}
+
+/**
+ * `color` is fed straight into a Mapbox paint property, and Mapbox rejects the
+ * whole layer if any feature carries a value it cannot parse — one bad string
+ * would take every corridor off the map, not just its own. Anything that is
+ * not plainly a CSS colour falls back to the severity grade.
+ */
+function toLineColor(color: string | null | undefined, grade: string | null | undefined) {
+  const candidate = (color ?? "").trim();
+  const isCssColor =
+    /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(candidate) ||
+    /^(?:rgb|hsl)a?\([^)]*\)$/i.test(candidate);
+
+  return isCssColor ? candidate : SEVERITY_COLOR[toSeverity(grade)];
 }
 
 export const SEVERITY_COLOR: Record<Severity, string> = {

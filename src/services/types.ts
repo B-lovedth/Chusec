@@ -70,12 +70,20 @@ export type RouteResponse = {
 export type ReportCreate = {
   incident_type: string;
   note?: string | null;
+  lat?: number | null;
+  lon?: number | null;
+  /** Legacy pair kept alongside lat/lon: x is longitude, y is latitude. */
   x?: number | null;
   y?: number | null;
+  location_name?: string | null;
+  evidence_url?: string | null;
+  /** Defaults to true server-side, so it must be sent explicitly. */
+  is_anonymous?: boolean;
 };
 
 export type ReportResponse = ReportCreate & {
   id: number;
+  user_id: number | null;
   created_at: string;
 };
 
@@ -90,6 +98,21 @@ export type SOSCreate = {
 export type SOSResponse = SOSCreate & {
   id: number;
   created_at: string;
+  user_id?: number | null;
+  resolved?: boolean;
+  is_cancelled?: boolean;
+  cancelled_at?: string | null;
+  cancellation_reason?: string | null;
+  duress_audio_url?: string | null;
+  /** "none" | "recording" | "uploaded" — drives the client-side capture. */
+  duress_recording_status?: string | null;
+  /** Deadline the server wants ambient audio captured up to. */
+  duress_recording_until?: string | null;
+};
+
+export type SOSCancelRequest = {
+  cancellation_reason?: string | null;
+  duress_audio_url?: string | null;
 };
 
 /* ------------------------------------------------------------------ *
@@ -172,6 +195,92 @@ export type CitizenDashboardResponse = {
   severity_breakdown: SeverityBreakdown;
   active_corridor_warning: string | null;
   transit_corridors: TransitCorridorResponse[];
+};
+
+/* ------------------------------------------------------------------ *
+ * Consolidated unit dashboard
+ * ------------------------------------------------------------------ */
+
+export type UnitAssignedIncidentResponse = {
+  id: number;
+  type: string;
+  location_name: string;
+  severity: string;
+  description: string | null;
+  lat: number | null;
+  lon: number | null;
+  /** Server-side progress: dispatched | en_route | on_scene | resolved. */
+  unit_status: string;
+  resolved: boolean;
+  successful: boolean;
+  created_at: string;
+  en_route_at: string | null;
+  arrived_at: string | null;
+  resolved_at: string | null;
+  victims_injured: number;
+  victims_dead: number;
+  criminals_injured: number;
+  criminals_dead: number;
+  criminals_arrested: number;
+  agents_injured: number;
+  agents_dead: number;
+  clearance_notes: string | null;
+  evidence_url: string | null;
+  evidence_urls: unknown[];
+  backup_requests: unknown[];
+};
+
+export type UnitDashboardResponse = {
+  unit_id: number;
+  unit_name: string;
+  callsign: string | null;
+  agency: string | null;
+  lat: number | null;
+  lon: number | null;
+  unread_notifications_count: number;
+  assigned_incidents_count: number;
+  active_assigned_incidents: UnitAssignedIncidentResponse[];
+  resolved_incidents: UnitAssignedIncidentResponse[];
+};
+
+/* ------------------------------------------------------------------ *
+ * Unit mesh comms
+ * ------------------------------------------------------------------ */
+
+export type UnitMessageCreate = {
+  sender_name: string;
+  sender_role: string;
+  message: string;
+  area?: string | null;
+  /** Defaults to "mesh" server-side. */
+  channel?: string | null;
+};
+
+export type UnitMessageResponse = UnitMessageCreate & {
+  id: number;
+  created_at: string;
+};
+
+/* ------------------------------------------------------------------ *
+ * Notifications
+ * ------------------------------------------------------------------ */
+
+export type NotificationResponse = {
+  id: number;
+  user_id: number | null;
+  role_target: string | null;
+  title: string;
+  message: string;
+  type: string;
+  link: string | null;
+  incident_id: number | null;
+  is_read: boolean;
+  created_at: string;
+};
+
+export type NotificationListResponse = {
+  unread_count: number;
+  notifications: NotificationResponse[];
 };
 
 export type MemberResponse = {
