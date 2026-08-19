@@ -1,6 +1,13 @@
 import type { CommandIncident, CommandStat, SecurityUnit, Agency } from "@/data/admin";
-import type { DashboardStats, IncidentResponse, UnitResponse } from "@/services/types";
+import type {
+  DashboardStats,
+  IncidentResponse,
+  UnitAssignedIncidentResponse,
+  UnitDashboardResponse,
+  UnitResponse,
+} from "@/services/types";
 import { toSeverity } from "@/lib/mappers";
+import { UNIT_STATUSES, type UnitStatus } from "@/components/unit/ResponseProgress";
 
 /* ------------------------------------------------------------------ *
  * Stats
@@ -59,6 +66,41 @@ function formatDate(iso: string) {
   return date.toLocaleDateString("en-NG", { month: "short", day: "numeric", year: "numeric" });
 }
 
+/** Normalises the server's progress string onto the stepper's four states. */
+export function toUnitStatus(value: string | null | undefined): UnitStatus {
+  const normalised = (value ?? "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+  const match = UNIT_STATUSES.find((status) => status === normalised);
+  if (match) return match;
+  // Older records use "routing"; treat anything unknown as freshly dispatched.
+  return normalised === "routing" ? "en_route" : "dispatched";
+}
+
+export function toAssignedIncident(incident: UnitAssignedIncidentResponse): CommandIncident {
+  const severity = toSeverity(incident.severity);
+
+  return {
+    id: String(incident.id),
+    reference: `INC-${String(incident.id).padStart(3, "0")}`,
+    date: formatDate(incident.created_at),
+    time: new Date(incident.created_at).toLocaleTimeString("en-NG", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+    title: incident.type,
+    location: incident.location_name,
+    tag: incident.resolved ? { kind: "resolved" } : { kind: "severity", value: severity },
+    point: { x: 50, y: 50 },
+    coordinates:
+      incident.lat !== null && incident.lon !== null
+        ? { lat: incident.lat, lon: incident.lon }
+        : null,
+    severity,
+    reportedBy: "Command dispatch",
+    narrative: incident.description ?? `${incident.type} at ${incident.location_name}.`,
+    evidence: [],
+  };
+}
+
 export function toCommandIncident(incident: IncidentResponse): CommandIncident {
   const severity = toSeverity(incident.severity);
 
@@ -113,7 +155,7 @@ const KNOWN_AGENCIES: Agency[] = [
 
 /** Returns null rather than guessing — badging every unclassified unit as
  *  police would be a fabrication on a law-enforcement screen. */
-function toAgency(value: string | null | undefined): Agency | null {
+export function toAgency(value: string | null | undefined): Agency | null {
   const match = KNOWN_AGENCIES.find(
     (agency) => agency.toLowerCase() === (value ?? "").trim().toLowerCase(),
   );
@@ -127,6 +169,33 @@ function toList(value: string | null): string[] {
     .split(/[,;|\n]/)
     .map((entry) => entry.trim())
     .filter(Boolean);
+}
+
+/**
+ * The unit portal cannot read `/api/dashboard/units` — that roster is
+ * admin-only and answers 403 to a unit token. All a responding unit can plot
+ * is itself, from its own dashboard payload.
+ */
+export function toOwnUnitMarker(dashboard: UnitDashboardResponse): SecurityUnit | null {
+  if (dashboard.lat === null || dashboard.lon === null) return null;
+
+  return {
+    id: String(dashboard.unit_id),
+    name: dashboard.unit_name,
+    agency: toAgency(dashboard.agency),
+    callsign: dashboard.callsign ?? null,
+    lat: dashboard.lat,
+    lon: dashboard.lon,
+    isActive: true,
+    state: "—",
+    address: "—",
+    lga: "",
+    phone: "—",
+    respondingUnit: "—",
+    teamLead: "—",
+    responders: [],
+    vehicles: [],
+  };
 }
 
 export function toSecurityUnit(unit: UnitResponse): SecurityUnit {

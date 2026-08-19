@@ -6,3 +6,5 @@ export * from "./routes.service";
 export * from "./sos.service";
 export * from "./dashboard.service";
 export * from "./beacons.service";
+export * from "./notifications.service";
+export * from "./unit-messages.service";
