@@ -7,6 +7,7 @@
 
 .sos-fab {
   position: fixed;
+  z-index: 1000;
  top: auto;
 bottom: 50px;
 right: auto;
@@ -293,6 +294,41 @@ transform: none;
 
 .sos-dispatch-error {
   margin-top: 12px;
+}
+
+/* Ambient capture is never silent in the UI — the user is told it is running. */
+.sos-recording {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 9px 12px;
+  border-radius: $r-sm;
+  background: $critical-bg;
+  color: $critical;
+  font-size: 13px;
+  font-weight: 600;
+
+  svg {
+    animation: sos-recording-pulse 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes sos-recording-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sos-recording svg {
+    animation: none;
+  }
 }
 
 .sos-modal__title {

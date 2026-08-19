@@ -1,13 +1,38 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Heart, MapPin, X } from "lucide-react";
+import { Heart, MapPin, Mic, X } from "lucide-react";
 import { sosRecipients } from "@/data/sos";
 import { useDraggable } from "@/hooks/useDraggable";
-import { triggerSos } from "@/services/sos.service";
+import {
+  cancelSos,
+  cancelSosWithAudio,
+  triggerSos,
+  uploadDuressAudio,
+} from "@/services/sos.service";
+import { startDuressRecording, type DuressRecording } from "@/lib/duress-audio";
 import { getCurrentCoordinates, toApiPoint } from "@/lib/geolocation";
+import type { SOSResponse } from "@/services/types";
 
 const HOLD_TO_CANCEL_MS = 2000;
+
+/** Used only when the server asks for a recording but names no deadline. */
+const FALLBACK_RECORDING_MS = 30_000;
+
+/**
+ * The server decides whether ambient audio is captured, via
+ * `duress_recording_status` / `duress_recording_until` on the SOS response.
+ * Returns the epoch ms to record until, or null to record nothing.
+ */
+function recordingDeadline(sos: SOSResponse): number | null {
+  const status = (sos.duress_recording_status ?? "none").trim().toLowerCase();
+  if (status === "none" || status === "" || status === "uploaded") return null;
+
+  const until = sos.duress_recording_until ? new Date(sos.duress_recording_until).getTime() : NaN;
+  if (Number.isNaN(until)) return Date.now() + FALLBACK_RECORDING_MS;
+
+  return until;
+}
 
 export function SosLauncher() {
   const [isActive, setIsActive] = useState(false);
@@ -15,7 +40,11 @@ export function SosLauncher() {
   const [holdProgress, setHoldProgress] = useState(0);
   const [dispatchError, setDispatchError] = useState("");
   const [isLocationLive, setIsLocationLive] = useState(false);
+  const [sosId, setSosId] = useState<number | null>(null);
+  const [recordingUntil, setRecordingUntil] = useState<number | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
   const frameRef = useRef<number | null>(null);
+  const recorderRef = useRef<DuressRecording | null>(null);
   const {
     ref: fabRef,
     position: fabPosition,
@@ -32,11 +61,53 @@ export function SosLauncher() {
     setHoldProgress(0);
   }, []);
 
+  /**
+   * Cancelling stands the alert down on the backend too — the old version only
+   * reset local state, which left the SOS open for command indefinitely.
+   * Anything captured so far rides along, since a cancellation made under
+   * coercion is exactly what the duress clip exists to record.
+   */
   const deactivate = useCallback(() => {
     stopHold();
-    setIsActive(false);
-    setIsOpen(false);
-  }, [stopHold]);
+
+    const id = sosId;
+    const recording = recorderRef.current;
+    recorderRef.current = null;
+    setRecordingUntil(null);
+
+    if (id === null) {
+      setIsActive(false);
+      setIsOpen(false);
+      return;
+    }
+
+    setIsCancelling(true);
+    setDispatchError("");
+
+    const request = recording
+      ? recording.stop().then((file) =>
+          file
+            ? cancelSosWithAudio(id, file)
+            : cancelSos(id, { cancellation_reason: "Cancelled by user" }),
+        )
+      : cancelSos(id, { cancellation_reason: "Cancelled by user" });
+
+    request
+      .then(() => {
+        setSosId(null);
+        setIsActive(false);
+        setIsOpen(false);
+      })
+      .catch((error: unknown) => {
+        // The alert is still live, so the UI must keep saying so.
+        setDispatchError(
+          error instanceof Error
+            ? `${error.message} — the SOS is still active.`
+            : "Could not cancel. The SOS is still active.",
+        );
+      })
+      .finally(() => setIsCancelling(false));
+  }, [sosId, stopHold]);
 
   const startHold = useCallback(() => {
     const start = performance.now();
@@ -57,6 +128,38 @@ export function SosLauncher() {
   }, [deactivate]);
 
   useEffect(() => stopHold, [stopHold]);
+
+  /** Closes the capture window the server asked for and ships the clip. */
+  useEffect(() => {
+    if (recordingUntil === null || sosId === null) return;
+
+    const timer = window.setTimeout(
+      () => {
+        const recording = recorderRef.current;
+        recorderRef.current = null;
+        setRecordingUntil(null);
+
+        recording
+          ?.stop()
+          .then((file) => (file ? uploadDuressAudio(sosId, file) : null))
+          .catch(() => {
+            // A missing clip must never surface over the live SOS status.
+          });
+      },
+      Math.max(0, recordingUntil - Date.now()),
+    );
+
+    return () => window.clearTimeout(timer);
+  }, [recordingUntil, sosId]);
+
+  // Never leave the microphone open if the component goes away mid-capture.
+  useEffect(
+    () => () => {
+      recorderRef.current?.stop();
+      recorderRef.current = null;
+    },
+    [],
+  );
 
   // Lock the page behind the dialog and wire up Escape.
   useEffect(() => {
@@ -107,6 +210,19 @@ export function SosLauncher() {
             .then((coordinates) => {
               setIsLocationLive(coordinates !== null);
               return triggerSos(toApiPoint(coordinates));
+            })
+            .then((sos) => {
+              setSosId(sos.id);
+
+              const deadline = recordingDeadline(sos);
+              if (deadline === null) return;
+
+              // Capture is gated by the browser's own microphone prompt.
+              return startDuressRecording().then((recording) => {
+                if (!recording) return;
+                recorderRef.current = recording;
+                setRecordingUntil(deadline);
+              });
             })
             .catch((error: unknown) => {
               setDispatchError(
@@ -167,6 +283,13 @@ export function SosLauncher() {
                 </span>
               </div>
 
+              {recordingUntil !== null && (
+                <div className="sos-recording" role="status">
+                  <Mic size={15} strokeWidth={2} aria-hidden="true" />
+                  Recording ambient audio for command
+                </div>
+              )}
+
               {dispatchError && (
                 <div className="auth-status auth-status--error sos-dispatch-error" role="alert">
                   {dispatchError}
@@ -199,13 +322,14 @@ export function SosLauncher() {
               <button
                 type="button"
                 className="sos-cancel"
-                onPointerDown={startHold}
+                onPointerDown={isCancelling ? undefined : startHold}
                 onPointerUp={stopHold}
                 onPointerLeave={stopHold}
                 onPointerCancel={stopHold}
+                disabled={isCancelling}
                 aria-label="Hold for two seconds to cancel SOS"
               >
-                CANCEL (Hold 2 sec)
+                {isCancelling ? "CANCELLING..." : "CANCEL (Hold 2 sec)"}
                 <span
                   className="sos-cancel__progress"
                   style={{ width: `${holdProgress * 100}%` }}
