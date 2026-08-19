@@ -3,7 +3,8 @@
 import { useMemo } from "react";
 import { Minus, Plus } from "lucide-react";
 import { MapCanvas } from "@/components/dashboard/MapCanvas";
-import { MapboxMap, MAPBOX_TOKEN, type MapMarker } from "@/components/map/MapboxMap";
+import { MapboxMap, MAPBOX_TOKEN, type MapLine, type MapMarker } from "@/components/map/MapboxMap";
+import { useTracedLines } from "@/hooks/useTracedLines";
 import { SeverityBadge } from "@/components/ui/SeverityBadge";
 import type { CommandIncident, SecurityUnit } from "@/data/admin";
 
@@ -69,12 +70,38 @@ export function CommandMap({ incidents, selectedId, onSelect, units = [] }: Comm
     [units],
   );
 
+  /**
+   * The road a responding unit would actually drive to reach the selected
+   * incident. Only drawn when both ends have real coordinates — a line to a
+   * guessed position would be worse than none.
+   */
+  const straightRoutes = useMemo<MapLine[]>(() => {
+    const target = incidents.find((incident) => incident.id === selectedId) ?? null;
+    if (!target?.coordinates) return [];
+
+    return units
+      .filter((unit) => unit.lat !== null && unit.lon !== null)
+      .slice(0, 3)
+      .map((unit) => ({
+        id: `route-${unit.id}`,
+        coordinates: [
+          [unit.lon as number, unit.lat as number],
+          [target.coordinates!.lon, target.coordinates!.lat],
+        ] as [number, number][],
+        color: "#0080ff",
+        name: `${unit.callsign ?? unit.name} → ${target.reference}`,
+        isRoute: true,
+      }));
+  }, [incidents, selectedId, units]);
+
+  const routes = useTracedLines(straightRoutes);
+
   const useMapbox = Boolean(MAPBOX_TOKEN);
 
   return (
     <div className="command-map">
       {useMapbox ? (
-        <MapboxMap markers={[...markers, ...unitMarkers]} onSelect={onSelect} />
+        <MapboxMap markers={[...markers, ...unitMarkers]} lines={routes} onSelect={onSelect} />
       ) : (
         <>
           <MapCanvas showOverlays={false} />

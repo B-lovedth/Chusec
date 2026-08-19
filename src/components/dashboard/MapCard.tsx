@@ -6,6 +6,7 @@ import { CorridorLegend } from "@/components/dashboard/CorridorLegend";
 import { MapCanvas } from "@/components/dashboard/MapCanvas";
 import { MapboxMap, MAPBOX_TOKEN, type MapMarker } from "@/components/map/MapboxMap";
 import { toCorridorLine, toSeverity } from "@/lib/mappers";
+import { useTracedLines } from "@/hooks/useTracedLines";
 import type { NearbyIncidentResponse, TransitCorridorResponse } from "@/services/types";
 
 const markerColor: Record<string, string> = {
@@ -32,10 +33,14 @@ export function MapCard({
   onSelectIncident,
 }: MapCardProps) {
   // Only corridors the backend has given geometry for produce a line.
-  const lines = useMemo(
+  const straightLines = useMemo(
     () => corridors.map(toCorridorLine).filter((line): line is NonNullable<typeof line> => line !== null),
     [corridors],
   );
+
+  // Straight segments between the corridor's endpoints become the real road
+  // shape; the straight version shows until each trace resolves.
+  const lines = useTracedLines(straightLines);
 
   const markers = useMemo<MapMarker[]>(() => {
     const incidentMarkers: MapMarker[] = incidents.map((incident) => {

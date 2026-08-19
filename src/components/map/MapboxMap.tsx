@@ -78,11 +78,14 @@ export type MapLine = {
   coordinates: [number, number][];
   color: string;
   name: string;
+  /** Dashed and thinner — used for a unit's route to an incident. */
+  isRoute?: boolean;
 };
 
 const CORRIDOR_SOURCE = "corridors";
 const CORRIDOR_HALO_LAYER = "corridors-halo";
 const CORRIDOR_LINE_LAYER = "corridors-line";
+const ROUTE_LINE_LAYER = "routes-line";
 
 type MapboxMapProps = {
   markers?: MapMarker[];
@@ -177,7 +180,7 @@ export function MapboxMap({
         type: "FeatureCollection" as const,
         features: lines.map((line) => ({
           type: "Feature" as const,
-          properties: { color: line.color, name: line.name },
+          properties: { color: line.color, name: line.name, route: line.isRoute ? 1 : 0 },
           geometry: { type: "LineString" as const, coordinates: line.coordinates },
         })),
       };
@@ -196,6 +199,7 @@ export function MapboxMap({
         id: CORRIDOR_HALO_LAYER,
         type: "line",
         source: CORRIDOR_SOURCE,
+        filter: ["==", ["get", "route"], 0],
         layout: { "line-cap": "round", "line-join": "round" },
         paint: { "line-color": ["get", "color"], "line-width": 12, "line-opacity": 0.22 },
       });
@@ -204,8 +208,26 @@ export function MapboxMap({
         id: CORRIDOR_LINE_LAYER,
         type: "line",
         source: CORRIDOR_SOURCE,
+        filter: ["==", ["get", "route"], 0],
         layout: { "line-cap": "round", "line-join": "round" },
         paint: { "line-color": ["get", "color"], "line-width": 4, "line-opacity": 0.95 },
+      });
+
+      /* Routes get their own layer rather than a data-driven dash pattern:
+         `line-dasharray` accepts only zoom expressions, and feeding it a
+         `["get", …]` throws, which would take the corridors down with it. */
+      map.addLayer({
+        id: ROUTE_LINE_LAYER,
+        type: "line",
+        source: CORRIDOR_SOURCE,
+        filter: ["==", ["get", "route"], 1],
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-color": ["get", "color"],
+          "line-width": 3.5,
+          "line-opacity": 0.95,
+          "line-dasharray": [2, 1.6],
+        },
       });
     };
 
